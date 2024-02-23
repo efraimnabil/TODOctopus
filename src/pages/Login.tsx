@@ -34,10 +34,11 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      const {status} = await axiosInstance.post('/auth/local', data);
+      const {status, data: resData} = await axiosInstance.post('/auth/local', data);
       console.log(status);
+      console.log(resData);
       if (status === 200) {
-        toast.success('You are logged in', {
+        toast.success('You are logged in, We will redirect you to home page in 2 seconds', {
           position: 'top-center',
           style: {
             backgroundColor: 'black',
@@ -45,6 +46,12 @@ const LoginPage = () => {
             width: 'fit-content',
           }
         });
+
+        localStorage.setItem('loggedInUser', JSON.stringify(resData));
+
+        setTimeout(() => {
+          location.replace('/');
+        }, 2000);
       }
 
     } catch (err) {
