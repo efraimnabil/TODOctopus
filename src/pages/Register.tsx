@@ -5,6 +5,11 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { RegisterForm } from "../data";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { registerSchema } from "../validations";
+import axiosInstance from "../config/axios.config";
+import toast from "react-hot-toast";
+import { useState } from "react";
+import { AxiosError } from "axios";
+import { IErrorRes } from "../interfaces";
 
 interface IFormInput {
   username: string;
@@ -22,10 +27,43 @@ const RegisterPage = () => {
       resolver: yupResolver(registerSchema)
     }
   );
+  const [isloading, setIsLoading] = useState(false);
 
   // ** Handlers
-  const onSubmit: SubmitHandler<IFormInput> = (data) => {
+  const onSubmit: SubmitHandler<IFormInput> = async (data) => {
     console.log(data);
+    setIsLoading(true);
+
+    try {
+      const {status} = await axiosInstance.post('/auth/local/register', data);
+      console.log(status);
+      if (status === 200) {
+        toast.success('You will be redirected to login page after 3 seconds',{
+          position: 'top-center',
+          duration: 3000,
+          style: {
+            backgroundColor: 'black',
+            color: '#fff',
+            width: 'fit-content',
+          }
+        });
+      }
+      
+    } catch (err) {
+      const errorObj = err as AxiosError<IErrorRes>;
+      const message = errorObj.response?.data.error.message || 'Something went wrong';
+      toast.error(message, {
+        position: 'top-center',
+        style: {
+          backgroundColor: 'black',
+          color: '#fff',
+          width: 'fit-content',
+        }
+      });
+    }
+    finally {
+      setIsLoading(false);
+    }
   };
 
 
@@ -50,7 +88,9 @@ const RegisterPage = () => {
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         {renderRegisterForm}
 
-        <Button fullWidth>Register</Button>
+        <Button fullWidth isLoading={isloading}>
+          Register
+        </Button>
       </form>
     </div>
   );
