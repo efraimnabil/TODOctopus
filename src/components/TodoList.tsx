@@ -193,7 +193,7 @@ const TodoList = () => {
               <Button className="bg-indigo-700 hover:bg-indigo-800">
                 Add
               </Button>
-              <Button variant="cancel" onClick={closeAddModal}>
+              <Button variant="cancel" onClick={closeAddModal} type="button">
                 Cancel
               </Button>
             </div>
@@ -209,7 +209,7 @@ const TodoList = () => {
               <Button className="bg-indigo-700 hover:bg-indigo-800">
                 Update
               </Button>
-              <Button variant="cancel" onClick={onCloseEditModal}>
+              <Button variant="cancel" onClick={onCloseEditModal} type="button">
                 Cancel
               </Button>
             </div>
@@ -227,7 +227,7 @@ const TodoList = () => {
           <Button variant={"danger"} size={"sm"} onClick={onSubmitRemoveTodo}>
             Yes, remove
           </Button>
-          <Button variant={"cancel"} size={"sm"} onClick={closeConfirmModal}>
+          <Button variant={"cancel"} size={"sm"} onClick={closeConfirmModal} type="button">
             Cancel
           </Button>
         </div>
