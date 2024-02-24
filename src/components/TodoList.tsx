@@ -6,6 +6,7 @@ import Input from "./ui/Input";
 import Modal from "./ui/Modal";
 import Textarea from "./ui/Textarea";
 import axiosInstance from "../config/axios.config";
+import TodoSkeleton from "./TodoSkeleton";
 const TodoList = () => {
   const storageKey = "loggedInUser";
   const userDataString = localStorage.getItem(storageKey);
@@ -13,14 +14,21 @@ const TodoList = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isOpenConfirmModal, setIsOpenConfirmModal] = useState(false);
+  const [isOpenAddModal, setIsOpenAddModal] = useState(false);
+  const [queryVersion, setQueryVersion] = useState(1);
   const [editTodo, setEditTodo] = useState<ITodo>({
+    id: 0,
+    title: "",
+    description: "",
+  })
+  const [addTodo, setAddTodo] = useState<ITodo>({
     id: 0,
     title: "",
     description: "",
   })
   const {isLoading, data} = useAuthQuery({
     // todoList+$todotoedit.id
-    queryKey: ["todoList", `${editTodo.id}`],
+    queryKey: ["todoList", `${queryVersion}`],
     url: "/users/me?populate=todos",
     config: {
       headers: {
@@ -48,13 +56,26 @@ const TodoList = () => {
     setIsOpenConfirmModal(false);
   }
 
-  const openConfirmModal = () => {
+  const openConfirmModal = (todo: ITodo) => {
+    setEditTodo(todo);
     setIsOpenConfirmModal(true);
+  }
+
+  const openAddModal = () => {
+    setIsOpenAddModal(true);
+  }
+
+  const closeAddModal = () => {
+    setIsOpenAddModal(false);
   }
 
   const handleEditTodoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setEditTodo((prev) => ({ ...prev, [name]: value }));
+  }
+  const handleAddTodoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setAddTodo((prev) => ({ ...prev, [name]: value }));
   }
 
   const handleEditTodoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -75,6 +96,7 @@ const TodoList = () => {
       if(status === 200) {
         onCloseEditModal();
         // ** Refetch the todos
+        setQueryVersion((prev) => prev + 1);
         
       }
     } catch (error) {
@@ -85,16 +107,41 @@ const TodoList = () => {
     }
   }
 
-  const onSubmitRemoveTodo = async () => {
+  const handleAddTodoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     try {
-      const {status} = await axiosInstance.delete(`/todos/${editTodo.id}`, {
+      const {status} = await axiosInstance.post(`/todos`, {
+        data: {
+          title: addTodo.title,
+          description: addTodo.description,
+        },
+      },
+      {
         headers: {
           Authorization: `Bearer ${userData?.jwt}`,
         },
       });
       if(status === 200) {
+        closeAddModal();
+        // ** Refetch the todos
+        setQueryVersion((prev) => prev + 1);
+      }
+    } catch (error) {
+      
+    }
+  }
+
+  const onSubmitRemoveTodo = async () => {
+    try {
+      const {status} = await axiosInstance.delete(`/todos/${editTodo.id}`, {
+        headers: {
+          Authorization: `Bearer ${userData?.jwt}`,
+        }, 
+      });
+      if(status === 200) {
         closeConfirmModal();
         // ** Refetch the todos
+        setQueryVersion((prev) => prev + 1);
       }
     } catch (error) {
       
@@ -102,7 +149,11 @@ const TodoList = () => {
   }
   
 
-  if(isLoading) return <p>Loading...</p>
+  if(isLoading) return (
+    <div className="space-y-1">
+      {Array.from({ length: 3 }).map((_, i) => <TodoSkeleton key={i} />)}
+    </div>
+  )
 
   const renderTodos = data.todos.map((todo: ITodo) => (
     <div key={todo.id} className="flex items-center justify-between hover:bg-gray-100 duration-300 p-3 rounded-md even:bg-gray-100">
@@ -111,7 +162,7 @@ const TodoList = () => {
         <Button size={"sm"} onClick={() => onOpenEditModal(todo)} isLoading={isUpdating}>
           Edit
         </Button>
-        <Button variant={"danger"} size={"sm"} onClick={openConfirmModal}>
+        <Button variant={"danger"} size={"sm"} onClick={() => openConfirmModal(todo)}>
           Remove
         </Button>
       </div>
@@ -120,12 +171,34 @@ const TodoList = () => {
 
   return (
     <div className="space-y-1 ">
+      <div className="w-fit mx-auto my-10">
+        <Button onClick={openAddModal} className="bg-indigo-700 hover:bg-indigo-800">
+          Add Todo
+        </Button>
+      </div>
+      
 
        { data.todos.length? (
           renderTodos
        ) : (
          <p>No todos found</p>
        )}
+
+       {/* Add todo Modal */}
+       <Modal isOpen={isOpenAddModal} closeModal={closeAddModal} title="Add Todo">
+          <form className="space-y-3" onSubmit={handleAddTodoSubmit}>
+            <Input value={addTodo.title} name="title" placeholder="Title" onChange={handleAddTodoChange} />
+            <Textarea value={addTodo.description} name="description" placeholder="Description" onChange={handleAddTodoChange} />
+            <div className="flex justify-start space-x-3 mt-4">
+              <Button className="bg-indigo-700 hover:bg-indigo-800">
+                Add
+              </Button>
+              <Button variant="cancel" onClick={closeAddModal}>
+                Cancel
+              </Button>
+            </div>
+          </form>
+       </Modal>
 
        {/**Edit todo Modal */}
        <Modal isOpen={isEditModalOpen} closeModal={onCloseEditModal} title="Edit Todo">
@@ -141,6 +214,7 @@ const TodoList = () => {
               </Button>
             </div>
           </form>
+      </Modal>
 
       {/* DELETE TODO CONFIRM MODAL */}
       <Modal
@@ -159,7 +233,6 @@ const TodoList = () => {
         </div>
       </Modal>
 
-       </Modal>
     </div>
   );
 };
