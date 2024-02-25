@@ -114,6 +114,7 @@ const TodoList = () => {
         data: {
           title: addTodo.title,
           description: addTodo.description,
+          user: [userData.user.id],
         },
       },
       {
@@ -127,7 +128,7 @@ const TodoList = () => {
         setQueryVersion((prev) => prev + 1);
       }
     } catch (error) {
-      
+      console.log(error);
     }
   }
 
