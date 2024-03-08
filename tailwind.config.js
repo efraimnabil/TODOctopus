@@ -23,6 +23,9 @@ export default {
         'white-08' : 'rgba(255, 255, 255, 0.08)',
         'black-90' : 'rgba(0, 0, 0, 0.90)',
       },
+      boxShadow: {
+        'custom-orange': '-1px 1px 4px 0px rgba(255, 77, 0, 0.80), 1px -1px 4px 0px rgba(255, 0, 184, 0.80)',
+      },
     },
   },
   plugins: [],
