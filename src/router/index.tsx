@@ -10,7 +10,6 @@ import RegisterPage from "../pages/Register";
 const storageKey = "loggedInUser";
 const userDataString = localStorage.getItem(storageKey);
 const userData = userDataString ? JSON.parse(userDataString) : null;
-console.log(userData);
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -20,9 +19,7 @@ const router = createBrowserRouter(
         <Route
           index
           element={
-            <ProtectedRoute isAllowed={userData?.jwt} redirectPath="/login" data={userData}>
               <HomePage />
-            </ProtectedRoute>
           }
         />
         <Route

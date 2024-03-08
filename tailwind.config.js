@@ -12,7 +12,18 @@ export default {
         "2xl": "6rem",
       },
     },
-    extend: {},
+    extend: {
+      fontFamily: {
+        Sunshiney: ["Sunshiney", "cursive"],
+        SourceSerifPro: ["Source Serif Pro", "serif"],
+      },
+      colors: {
+        'pink-trans': 'rgba(255, 0, 194, 0.80)',
+        'orange-trans': 'rgba(255, 77, 0, 0.80)',
+        'white-08' : 'rgba(255, 255, 255, 0.08)',
+        'black-90' : 'rgba(0, 0, 0, 0.90)',
+      },
+    },
   },
   plugins: [],
 };
