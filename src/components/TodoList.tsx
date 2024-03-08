@@ -8,6 +8,15 @@ import Textarea from "./ui/Textarea";
 import axiosInstance from "../config/axios.config";
 import TodoSkeleton from "./TodoSkeleton";
 import Paginator from "./Paginator";
+import octBody from "../assets/octBody.svg";
+import hand1 from "../assets/hand1.svg";
+import hand2 from "../assets/hand2.svg";
+import hand3 from "../assets/hand3.svg";
+import hand4 from "../assets/hand4.svg";
+import hand5 from "../assets/hand5.svg";
+import hand6 from "../assets/hand6.svg";
+import hand7 from "../assets/hand7.svg";
+import hand8 from "../assets/hand8.svg";
 const TodoList = () => {
   const storageKey = "loggedInUser";
   const userDataString = localStorage.getItem(storageKey);
@@ -18,7 +27,6 @@ const TodoList = () => {
   const [isOpenAddModal, setIsOpenAddModal] = useState(false);
   const [queryVersion, setQueryVersion] = useState(1);
   const [page, setPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
   const [sortBy, setSortBy] = useState<'DESC' | "ASC">("DESC");
   const [editTodo, setEditTodo] = useState<ITodo>({
     id: 0,
@@ -32,8 +40,8 @@ const TodoList = () => {
   })
   const {isLoading, data, isFetching} = useAuthQuery({
     // todoList+$todotoedit.id
-    queryKey: [`todos-page-${page}`, `${pageSize}`, `${queryVersion}`, `${sortBy}`],
-    url: `/todos?pagination[pageSize]=${pageSize}&pagination[page]=${page}&sort=createdAt:${sortBy}`,
+    queryKey: [`todos-page-${page}`, `${queryVersion}`, `${sortBy}`],
+    url: `/todos?pagination[pageSize]=${8}&pagination[page]=${page}&sort=createdAt:${sortBy}`,
     config: {
       headers: {
         Authorization: `Bearer ${userData?.jwt}`,
@@ -41,6 +49,11 @@ const TodoList = () => {
     },
   });
   console.log(data);
+
+
+  // map to know wich hand to use
+  const hands = [hand1, hand2, hand3, hand4, hand5, hand6, hand7, hand8];
+  const hand = hands[data?.data?.length - 1];
 
   // ** Handlers
 
@@ -50,10 +63,6 @@ const TodoList = () => {
 
   const onClickNext = () => {
     setPage((prev) => prev + 1);
-  }
-
-  const onChangePageSize = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPageSize(+e.target.value);
   }
 
   const onChangeSortBy = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -199,19 +208,17 @@ const TodoList = () => {
             <option value="DESC">Latest</option>
           </select>
 
-          <select className="border-2 border-indigo-600 rounded-md p-2" value={pageSize} onChange={onChangePageSize}>
-            <option disabled>Page size</option>
-            <option value={10}>10</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-          </select>
         </div>
+      </div>
+
+      <div className="flex items-center justify-center">
+        <img src={hand} alt="hand" className="w-1/2" />
       </div>
 
        {
         isLoading ? (
           <div className="space-y-1">
-            {Array.from({ length: pageSize }).map((_, i) => <TodoSkeleton key={i} />)}
+            {Array.from({ length: 8 }).map((_, i) => <TodoSkeleton key={i} />)}
           </div>
         ) : ( 
               data.data?.length? (
@@ -228,8 +235,7 @@ const TodoList = () => {
           isLoading={isLoading || isFetching}
           onClickPrev={onClickPrev}
           onClickNext={onClickNext}
-        />
-
+        /> 
        {/* Add todo Modal */}
        <Modal isOpen={isOpenAddModal} closeModal={closeAddModal} title="Add Todo">
           <form className="space-y-3" onSubmit={handleAddTodoSubmit}>
