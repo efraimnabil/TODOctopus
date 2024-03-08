@@ -212,7 +212,7 @@ const TodoList = () => {
       </div>
 
       <div className="flex items-center justify-center">
-        <img src={hand} alt="hand" className="w-1/2" />
+        <img src={hand} alt="hand" className="w-44 h-44" />
       </div>
 
        {
