@@ -1,5 +1,5 @@
-import TodoList from "../components/TodoList";
 import octopus from "../assets/octopus.svg";
+import hand from "../assets/hand.svg"
 import { Link } from "react-router-dom";
 const HomePage = () => {
   const storageKey = "loggedInUser";
@@ -22,13 +22,9 @@ const HomePage = () => {
   };
   return (
     <section 
-      className="mx-auto"
+      className="min-h-[calc(100vh-120px)]"
     >
-      {userData?.jwt ?
-        <TodoList />
-        :
-        (
-            <div className="flex flex-col items-center justify-between md:flex-row-reverse">
+            <div className="flex flex-col items-center justify-between md:flex-row-reverse min-h-[calc(100%-10px)]">
               <img 
                 src={octopus} 
                 alt="octopus" 
@@ -63,7 +59,7 @@ const HomePage = () => {
               </p>
 
               <Link
-                to="/login"
+                to={userData?.jwt ? "/TODOctopus" : "/login"}
                 className="relative mt-5 text-white font-SourceSerifPro py-2 px-4 w-52 text-center md:w-60 md:text-xl"
               >
                 Let's start
@@ -74,8 +70,8 @@ const HomePage = () => {
 
             </div>
             
-        )
-      }
+      <img src={hand} alt="hand" className="absolute bottom-0 right-0 rotate-180 w-24 h-24" />
+      <img src={hand} alt="hand" className="absolute bottom-0 left-0 scale-x-[-1] rotate-180 flip w-24 h-24" />
     </section>
   );
 };

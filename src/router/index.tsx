@@ -6,6 +6,7 @@ import ErrorHandler from "../components/errors/ErrorHandler";
 import HomePage from "../pages";
 import LoginPage from "../pages/Login";
 import RegisterPage from "../pages/Register";
+import TodoList from "../components/TodoList";
 
 const storageKey = "loggedInUser";
 const userDataString = localStorage.getItem(storageKey);
@@ -43,6 +44,14 @@ const router = createBrowserRouter(
           element={
             <ProtectedRoute isAllowed={!userData?.jwt} redirectPath="/login" data={userData}>
               <RegisterPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="TODOctopus"
+          element={
+            <ProtectedRoute isAllowed={userData?.jwt} redirectPath="/login" data={userData}>
+              <TodoList />
             </ProtectedRoute>
           }
         />

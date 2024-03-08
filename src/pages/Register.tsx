@@ -10,7 +10,7 @@ import toast from "react-hot-toast";
 import { useState } from "react";
 import { AxiosError } from "axios";
 import { IErrorRes } from "../interfaces";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 interface IFormInput {
   username: string;
   email: string;
@@ -116,7 +116,14 @@ const RegisterPage = () => {
       <form 
         className="z-10 rounded-[30px] relative py-12 px-8 bg-white-08 flex flex-col gap-8" 
         onSubmit={handleSubmit(onSubmit)}>
+
         {renderRegisterForm}
+
+        <p
+          className="text-white text-sm"
+        >
+          Already have an account? <Link to="/login" className="text-pink-500">Login</Link>
+        </p>
 
         <Button 
           fullWidth 

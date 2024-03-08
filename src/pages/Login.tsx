@@ -10,6 +10,7 @@ import axiosInstance from "../config/axios.config";
 import toast from "react-hot-toast";
 import { AxiosError } from "axios";
 import { IErrorRes } from "../interfaces";
+import { Link } from "react-router-dom";
 
 interface IFormInput {
   identifier: string;
@@ -123,6 +124,12 @@ const LoginPage = () => {
         onSubmit={handleSubmit(onSubmit)}
       >
         {renderLoginForm}
+
+        <p
+          className="text-white text-sm"
+        >
+          Don't have an account? <Link to="/register" className="text-pink-500">Register</Link>
+        </p>
 
         <Button 
           fullWidth 
