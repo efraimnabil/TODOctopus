@@ -27,18 +27,18 @@ const TodoList = () => {
   const [isOpenAddModal, setIsOpenAddModal] = useState(false);
   const [queryVersion, setQueryVersion] = useState(1);
   const [page, setPage] = useState<number>(1);
-  const [sortBy, setSortBy] = useState<'DESC' | "ASC">("DESC");
+  const [sortBy, setSortBy] = useState<"DESC" | "ASC">("DESC");
   const [editTodo, setEditTodo] = useState<ITodo>({
     id: 0,
     title: "",
     description: "",
-  })
+  });
   const [addTodo, setAddTodo] = useState<ITodo>({
     id: 0,
     title: "",
     description: "",
-  })
-  const {isLoading, data, isFetching} = useAuthQuery({
+  });
+  const { isLoading, data, isFetching } = useAuthQuery({
     // todoList+$todotoedit.id
     queryKey: [`todos-page-${page}`, `${queryVersion}`, `${sortBy}`],
     url: `/todos?pagination[pageSize]=${8}&pagination[page]=${page}&sort=createdAt:${sortBy}`,
@@ -50,7 +50,6 @@ const TodoList = () => {
   });
   console.log(data);
 
-
   // map to know wich hand to use
   const hands = [hand1, hand2, hand3, hand4, hand5, hand6, hand7, hand8];
   const hand = hands[data?.data?.length - 1];
@@ -59,15 +58,15 @@ const TodoList = () => {
 
   const onClickPrev = () => {
     setPage((prev) => prev - 1);
-  }
+  };
 
   const onClickNext = () => {
     setPage((prev) => prev + 1);
-  }
+  };
 
   const onChangeSortBy = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSortBy(e.target.value as "DESC" | "ASC");
-  }
+  };
 
   const onCloseEditModal = () => {
     setEditTodo({
@@ -81,79 +80,86 @@ const TodoList = () => {
   const onOpenEditModal = (todo: ITodo) => {
     setEditTodo(todo);
     setIsEditModalOpen(true);
-  }
+  };
 
   const closeConfirmModal = () => {
     setIsOpenConfirmModal(false);
-  }
+  };
 
   const openConfirmModal = (todo: ITodo) => {
     setEditTodo(todo);
     setIsOpenConfirmModal(true);
-  }
+  };
 
   const openAddModal = () => {
     setIsOpenAddModal(true);
-  }
+  };
 
   const closeAddModal = () => {
     setIsOpenAddModal(false);
-  }
+  };
 
-  const handleEditTodoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleEditTodoChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setEditTodo((prev) => ({ ...prev, [name]: value }));
-  }
-  const handleAddTodoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  };
+  const handleAddTodoChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setAddTodo((prev) => ({ ...prev, [name]: value }));
-  }
+  };
 
   const handleEditTodoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsUpdating(true);
     try {
-      const {status} = await axiosInstance.put(`/todos/${editTodo.id}`, {
-        data: {
-          title: editTodo.title,
-          description: editTodo.description,
+      const { status } = await axiosInstance.put(
+        `/todos/${editTodo.id}`,
+        {
+          data: {
+            title: editTodo.title,
+            description: editTodo.description,
+          },
         },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${userData?.jwt}`,
-        },
-      });
-      if(status === 200) {
+        {
+          headers: {
+            Authorization: `Bearer ${userData?.jwt}`,
+          },
+        }
+      );
+      if (status === 200) {
         onCloseEditModal();
         // ** Refetch the todos
         setQueryVersion((prev) => prev + 1);
-        
       }
     } catch (error) {
-      
-    }
-    finally {
+    } finally {
       setIsUpdating(false);
     }
-  }
+  };
 
   const handleAddTodoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const {status} = await axiosInstance.post(`/todos`, {
-        data: {
-          title: addTodo.title,
-          description: addTodo.description,
-          user: [userData.user.id],
+      const { status } = await axiosInstance.post(
+        `/todos`,
+        {
+          data: {
+            title: addTodo.title,
+            description: addTodo.description,
+            user: [userData.user.id],
+          },
         },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${userData?.jwt}`,
-        },
-      });
-      if(status === 200) {
+        {
+          headers: {
+            Authorization: `Bearer ${userData?.jwt}`,
+          },
+        }
+      );
+      if (status === 200) {
         closeAddModal();
         // ** Refetch the todos
         setQueryVersion((prev) => prev + 1);
@@ -161,39 +167,63 @@ const TodoList = () => {
     } catch (error) {
       console.log(error);
     }
-  }
+  };
 
   const onSubmitRemoveTodo = async () => {
     try {
-      const {status} = await axiosInstance.delete(`/todos/${editTodo.id}`, {
+      const { status } = await axiosInstance.delete(`/todos/${editTodo.id}`, {
         headers: {
           Authorization: `Bearer ${userData?.jwt}`,
-        }, 
+        },
       });
-      if(status === 200) {
+      if (status === 200) {
         closeConfirmModal();
         // ** Refetch the todos
         setQueryVersion((prev) => prev + 1);
       }
-    } catch (error) {
-      
-    }
-  }
-  
-    
-  const renderTodos = data?.data?.map(({id, attributes } : {id: number, attributes: ITodo}, i: number) => (
-    <div key={id} className="flex items-center justify-between hover:bg-gray-100 duration-300 p-3 rounded-md even:bg-gray-100">
-      <p className="w-full font-semibold">{id + " " + i + ". " + attributes.title}</p>
-      <div className="flex items-center justify-end w-full space-x-3">
-        <Button size={"sm"} onClick={() => onOpenEditModal({id, title: attributes.title, description: attributes.description})} isLoading={isUpdating}>
-          Edit
-        </Button>
-        <Button variant={"danger"} size={"sm"} onClick={() => openConfirmModal({id, title: attributes.title, description: attributes.description})}>
-          Remove
-        </Button>
+    } catch (error) {}
+  };
+
+  const renderTodos = data?.data?.map(
+    ({ id, attributes }: { id: number; attributes: ITodo }, i: number) => (
+      <div
+        key={id}
+        className="flex items-center justify-between hover:bg-gray-100 duration-300 p-3 rounded-md even:bg-gray-100"
+      >
+        <p className="w-full font-semibold">
+          {id + " " + i + ". " + attributes.title}
+        </p>
+        <div className="flex items-center justify-end w-full space-x-3">
+          <Button
+            size={"sm"}
+            onClick={() =>
+              onOpenEditModal({
+                id,
+                title: attributes.title,
+                description: attributes.description,
+              })
+            }
+            isLoading={isUpdating}
+          >
+            Edit
+          </Button>
+          <Button
+            variant={"danger"}
+            size={"sm"}
+            onClick={() =>
+              openConfirmModal({
+                id,
+                title: attributes.title,
+                description: attributes.description,
+              })
+            }
+          >
+            Remove
+          </Button>
+        </div>
       </div>
-    </div>
-  ));
+    )
+  );
 
   return (
     <div className="space-y-1 ">
@@ -202,12 +232,15 @@ const TodoList = () => {
           Add Todo
         </Button>
         <div className="flex items-center justify-between space-x-2 text-md">
-          <select className="border-2 border-indigo-600 rounded-md p-2" value={sortBy} onChange={onChangeSortBy}>
+          <select
+            className="border-2 border-indigo-600 rounded-md p-2"
+            value={sortBy}
+            onChange={onChangeSortBy}
+          >
             <option disabled>Sort by</option>
             <option value="ASC">Oldest</option>
             <option value="DESC">Latest</option>
           </select>
-
         </div>
       </div>
 
@@ -215,57 +248,81 @@ const TodoList = () => {
         <img src={hand} alt="hand" className="w-44 h-44" />
       </div>
 
-       {
-        isLoading ? (
-          <div className="space-y-1">
-            {Array.from({ length: 8 }).map((_, i) => <TodoSkeleton key={i} />)}
+      {isLoading ? (
+        <div className="space-y-1">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <TodoSkeleton key={i} />
+          ))}
+        </div>
+      ) : data.data?.length ? (
+        renderTodos
+      ) : (
+        <p>No todos found</p>
+      )}
+      <Paginator
+        page={page}
+        pageCount={data?.meta?.pagination.pageCount}
+        total={data?.meta?.pagination.total}
+        isLoading={isLoading || isFetching}
+        onClickPrev={onClickPrev}
+        onClickNext={onClickNext}
+      />
+      {/* Add todo Modal */}
+      <Modal
+        isOpen={isOpenAddModal}
+        closeModal={closeAddModal}
+        title="Add Todo"
+      >
+        <form className="space-y-3" onSubmit={handleAddTodoSubmit}>
+          <Input
+            value={addTodo.title}
+            name="title"
+            placeholder="Title"
+            onChange={handleAddTodoChange}
+          />
+          <Textarea
+            value={addTodo.description}
+            name="description"
+            placeholder="Description"
+            onChange={handleAddTodoChange}
+          />
+          <div className="flex justify-start space-x-3 mt-4">
+            <Button className="bg-indigo-700 hover:bg-indigo-800">Add</Button>
+            <Button variant="cancel" onClick={closeAddModal} type="button">
+              Cancel
+            </Button>
           </div>
-        ) : ( 
-              data.data?.length? (
-                  renderTodos
-              ) : (
-                <p>No todos found</p>
-              )
-            )
-          }
-        <Paginator 
-          page={page}
-          pageCount={data?.meta?.pagination.pageCount}
-          total={data?.meta?.pagination.total}
-          isLoading={isLoading || isFetching}
-          onClickPrev={onClickPrev}
-          onClickNext={onClickNext}
-        /> 
-       {/* Add todo Modal */}
-       <Modal isOpen={isOpenAddModal} closeModal={closeAddModal} title="Add Todo">
-          <form className="space-y-3" onSubmit={handleAddTodoSubmit}>
-            <Input value={addTodo.title} name="title" placeholder="Title" onChange={handleAddTodoChange} />
-            <Textarea value={addTodo.description} name="description" placeholder="Description" onChange={handleAddTodoChange} />
-            <div className="flex justify-start space-x-3 mt-4">
-              <Button className="bg-indigo-700 hover:bg-indigo-800">
-                Add
-              </Button>
-              <Button variant="cancel" onClick={closeAddModal} type="button">
-                Cancel
-              </Button>
-            </div>
-          </form>
-       </Modal>
+        </form>
+      </Modal>
 
-       {/**Edit todo Modal */}
-       <Modal isOpen={isEditModalOpen} closeModal={onCloseEditModal} title="Edit Todo">
-          <form className="space-y-3" onSubmit={handleEditTodoSubmit}>
-            <Input value={editTodo.title} name="title" placeholder="Title" onChange={handleEditTodoChange} />
-            <Textarea value={editTodo.description} name="description" placeholder="Description" onChange={handleEditTodoChange} />
-            <div className="flex justify-start space-x-3 mt-4">
-              <Button className="bg-indigo-700 hover:bg-indigo-800">
-                Update
-              </Button>
-              <Button variant="cancel" onClick={onCloseEditModal} type="button">
-                Cancel
-              </Button>
-            </div>
-          </form>
+      {/**Edit todo Modal */}
+      <Modal
+        isOpen={isEditModalOpen}
+        closeModal={onCloseEditModal}
+        title="Edit Todo"
+      >
+        <form className="space-y-3" onSubmit={handleEditTodoSubmit}>
+          <Input
+            value={editTodo.title}
+            name="title"
+            placeholder="Title"
+            onChange={handleEditTodoChange}
+          />
+          <Textarea
+            value={editTodo.description}
+            name="description"
+            placeholder="Description"
+            onChange={handleEditTodoChange}
+          />
+          <div className="flex justify-start space-x-3 mt-4">
+            <Button className="bg-indigo-700 hover:bg-indigo-800">
+              Update
+            </Button>
+            <Button variant="cancel" onClick={onCloseEditModal} type="button">
+              Cancel
+            </Button>
+          </div>
+        </form>
       </Modal>
 
       {/* DELETE TODO CONFIRM MODAL */}
@@ -279,15 +336,18 @@ const TodoList = () => {
           <Button variant={"danger"} size={"sm"} onClick={onSubmitRemoveTodo}>
             Yes, remove
           </Button>
-          <Button variant={"cancel"} size={"sm"} onClick={closeConfirmModal} type="button">
+          <Button
+            variant={"cancel"}
+            size={"sm"}
+            onClick={closeConfirmModal}
+            type="button"
+          >
             Cancel
           </Button>
         </div>
       </Modal>
-
     </div>
   );
 };
 
 export default TodoList;
-
