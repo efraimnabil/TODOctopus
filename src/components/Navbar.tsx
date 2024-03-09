@@ -59,7 +59,6 @@ const Navbar = () => {
 
               <Button 
                 className="cursor-pointer" 
-                size={"sm"} 
                 onClick={handleLogout}
               >
                 Logout

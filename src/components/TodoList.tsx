@@ -269,21 +269,55 @@ const TodoList = () => {
     )
   );
 
+  const beforeElementStyles: React.CSSProperties = {
+    content: '""',
+    position: 'absolute',
+    top: '0',
+    left: '0',
+    right: '0',
+    bottom: '0',
+    borderRadius: '50px',
+    border: '2px solid transparent',
+    background: 'linear-gradient(315deg, rgba(255, 0, 194, 0.80) 0%, rgba(255, 77, 0, 0.80) 100%) border-box',
+    WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
+    WebkitMaskComposite: 'destination-out',
+    maskComposite: 'exclude',
+  };
+
   return (
     <div className="space-y-1 ">
       <div className="flex items-center justify-between space-x-2">
-        <Button onClick={openAddModal}>Add Todo</Button>
         <div className="flex items-center justify-between space-x-2 text-md">
           <select
-            className="border-2 border-indigo-600 rounded-md p-2"
+            className="bg-gradient-to-br from-pink-trans to-orange-trans hover:from-pink-500 hover:to-orange-500 rounded-lg py-2 px-3 focus:bg-gray-200 focus:text-white focus:outline-none"
             value={sortBy}
             onChange={onChangeSortBy}
           >
-            <option disabled>Sort by</option>
-            <option value="ASC">Oldest</option>
-            <option value="DESC">Latest</option>
+            <option disabled className="text-gray-500">
+              Sort by
+            </option>
+            <option value="ASC" className="text-gray-950">
+              Oldest
+            </option>
+            <option value="DESC" className="text-gray-950">
+              Latest
+            </option>
           </select>
         </div>
+        <Button 
+        className="bg-gradient-to-bl from-pink-trans to-orange-trans hover:from-pink-500 hover:to-orange-500 rounded-lg"
+          onClick={openAddModal}
+        >
+          <svg width="50" height="50" viewBox="0 0 33 33" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <mask id="mask0_200_6476" style={{maskType: "alpha"}}
+              maskUnits="userSpaceOnUse" x="0" y="0" width="33" height="33">
+              <rect x="0.29248" y="0.291992" width="32.4154" height="32.4154" fill="#D9D9D9"/>
+              </mask>
+              <g mask="url(#mask0_200_6476)">
+              <path d="M15.4874 17.5133H8.73417C8.44716 17.5133 8.20658 17.4162 8.01242 17.2219C7.81827 17.0277 7.72119 16.787 7.72119 16.4999C7.72119 16.2127 7.81827 15.9722 8.01242 15.7783C8.20658 15.5843 8.44716 15.4874 8.73417 15.4874H15.4874V8.73417C15.4874 8.44716 15.5845 8.20658 15.7787 8.01242C15.973 7.81827 16.2136 7.72119 16.5008 7.72119C16.7879 7.72119 17.0285 7.81827 17.2224 8.01242C17.4163 8.20658 17.5133 8.44716 17.5133 8.73417V15.4874H24.2665C24.5535 15.4874 24.7941 15.5845 24.9882 15.7787C25.1824 15.973 25.2795 16.2136 25.2795 16.5008C25.2795 16.7879 25.1824 17.0285 24.9882 17.2224C24.7941 17.4163 24.5535 17.5133 24.2665 17.5133H17.5133V24.2665C17.5133 24.5535 17.4162 24.7941 17.2219 24.9882C17.0277 25.1824 16.787 25.2795 16.4999 25.2795C16.2127 25.2795 15.9722 25.1824 15.7783 24.9882C15.5843 24.7941 15.4874 24.5535 15.4874 24.2665V17.5133Z" fill="white"/>
+              </g>
+              </svg>
+        </Button>
       </div>
 
       <div className="flex items-center justify-center">
@@ -329,9 +363,18 @@ const TodoList = () => {
             onChange={handleAddTodoChange}
           />
           <div className="flex justify-start space-x-3 mt-4">
-            <Button className="bg-indigo-700 hover:bg-indigo-800">Add</Button>
-            <Button onClick={closeAddModal} type="button">
+            <Button 
+              className="bg-gradient-to-br from-pink-trans to-orange-trans text-white rounded-3xl w-24 text-center text-lg py-1 md:text-md md:w-28 font-SourceSerifPro"
+            >
+              Add
+            </Button>
+            <Button 
+              className="relative rounded-3xl w-24 text-center text-lg py-1 text-white md:text-md md:w-28 font-SourceSerifPro"
+              onClick={closeAddModal} 
+              type="button"
+            >
               Cancel
+              <span style={beforeElementStyles}></span>
             </Button>
           </div>
         </form>
@@ -357,11 +400,16 @@ const TodoList = () => {
             onChange={handleEditTodoChange}
           />
           <div className="flex justify-start space-x-3 mt-4">
-            <Button className="bg-indigo-700 hover:bg-indigo-800">
+            <Button className="bg-gradient-to-br from-pink-trans to-orange-trans text-white rounded-3xl w-24 text-center text-lg py-1 md:text-md md:w-28 font-SourceSerifPro" isLoading={isUpdating}>
               Update
             </Button>
-            <Button onClick={onCloseEditModal} type="button">
+            <Button
+              className="relative rounded-3xl w-24 text-center text-lg py-1 text-white md:text-md md:w-28 font-SourceSerifPro"
+              onClick={onCloseEditModal} 
+              type="button"
+            >
               Cancel
+              <span style={beforeElementStyles}></span>
             </Button>
           </div>
         </form>
@@ -375,9 +423,19 @@ const TodoList = () => {
         description="Deleting this Todo will remove it permanently from your inventory. Any associated data, sales history, and other related information will also be deleted. Please make sure this is the intended action."
       >
         <div className="flex items-center space-x-3">
-          <Button onClick={onSubmitRemoveTodo}>Yes, remove</Button>
-          <Button onClick={closeConfirmModal} type="button">
+          <Button 
+          className="bg-red-600 hover:bg-red-700 text-white rounded-xl w-28 text-center text-lg py-1 md:text-md md:w-32 font-SourceSerifPro"
+            onClick={onSubmitRemoveTodo}
+          >
+            Yes, remove
+          </Button>
+          <Button 
+            className="relative rounded-3xl w-24 text-center text-lg py-1 text-white md:text-md md:w-28 font-SourceSerifPro"
+            onClick={closeConfirmModal} 
+            type="button"
+          >
             Cancel
+            <span style={beforeElementStyles}></span>
           </Button>
         </div>
       </Modal>
