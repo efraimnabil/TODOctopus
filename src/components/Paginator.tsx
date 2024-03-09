@@ -40,7 +40,7 @@ const Paginator = ({isLoading, onClickNext, onClickPrev, page, pageCount, total}
   };
 
   return (
-    <div className="flex flex-col items-center space-y-5 mx-auto mt-10">
+    <div className="flex flex-col items-center space-y-5 mx-auto">
       <p className="text-sm text-white font-SourceSerifPro mx-3 mt-4">
         Octopus <span className="mx-1 font-semibold text-white text-md">{page}</span> to
         <span className="mx-1 font-semibold text-white ">{pageCount}</span> of

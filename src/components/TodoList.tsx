@@ -183,11 +183,44 @@ const TodoList = () => {
     } catch (error) {}
   };
 
+  const todosPostionsMd = [
+    "md:top-1 md:left-10",
+    "md:top-20 md:left-4",
+    "md:top-40 md:left-7",
+    "md:top-60 md:left-16",
+    "md:top-60 md:right-16",
+    "md:top-40 md:right-7",
+    "md:top-20 md:right-4",
+    "md:top-1 md:right-10",
+  ];
+
+  const todosPostionsLg = [
+    "lg:top-1 lg:left-10",
+    "lg:top-24 lg:left-4",
+    "lg:top-44 lg:left-7",
+    "lg:top-64 lg:left-16",
+    "lg:top-64 lg:right-16",
+    "lg:top-44 lg:right-7",
+    "lg:top-42 lg:right-4",
+    "lg:top-1 lg:right-10",
+  ];
+
+  const todosPostionsXl = [
+    "xl:top-1 xl:left-10",
+    "xl:top-28 xl:left-4",
+    "xl:top-56 xl:left-7",
+    "xl:top-80 xl:left-16",
+    "xl:top-80 xl:right-16",
+    "xl:top-56 xl:right-7",
+    "xl:top-28 xl:right-4",
+    "xl:top-1 xl:right-10",
+  ];
+
   const renderTodos = data?.data?.map(
-    ({ id, attributes }: { id: number; attributes: ITodo }) => (
+    ({ id, attributes }: { id: number; attributes: ITodo }, idx: number) => (
       <div
         key={id}
-        className="flex items-center justify-between duration-300 p-3 shadow-custom-orange rounded-2xl"
+        className={`flex w-full items-center justify-between duration-300 px-3 py-2 md:py-1 lg:py-2 shadow-custom-orange rounded-2xl md:absolute md:w-52 lg:w-60 xl:w-80 ${todosPostionsMd[idx]} ${todosPostionsLg[idx]} ${todosPostionsXl[idx]}`}
       >
         <p className="w-full font-semibold text-white font-SourceSerifPro">
           {attributes.title}
@@ -285,8 +318,8 @@ const TodoList = () => {
   };
 
   return (
-    <div className="space-y-1 ">
-      <div className="flex items-center justify-between space-x-2">
+    <div className="space-y-1 w-full flex flex-col items-center gap-10">
+      <div className="flex items-center justify-between space-x-2 w-full">
         <div className="flex items-center justify-between space-x-2 text-md">
           <select
             className="bg-gradient-to-br from-pink-trans to-orange-trans hover:from-pink-500 hover:to-orange-500 rounded-lg py-2 px-3 focus:bg-gray-200 focus:text-white focus:outline-none"
@@ -320,10 +353,6 @@ const TodoList = () => {
         </Button>
       </div>
 
-      <div className="flex items-center justify-center">
-        <img src={hand} alt="hand" className="w-44 h-44" />
-      h</div>
-
       {isLoading ? (
         <div className="space-y-1">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -331,7 +360,11 @@ const TodoList = () => {
           ))}
         </div>
       ) : data?.data?.length ? (
-        <div className="space-y-3">{renderTodos}</div>
+        <div className="flex flex-col w-full items-center justify-center gap-3 md:relative">
+          
+          <img src={hand} alt="hand" className="w-44 h-44 md:w-60 md:h-60 lg:w-72 lg:h-72 xl:w-96 xl:h-96" />
+          
+          {renderTodos}</div>
       ) : (
         <p>No todos found</p>
       )}
