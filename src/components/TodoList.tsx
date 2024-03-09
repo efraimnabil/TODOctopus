@@ -51,7 +51,7 @@ const TodoList = () => {
 
   // map to know wich hand to use
   const hands = [hand1, hand2, hand3, hand4, hand5, hand6, hand7, hand8];
-  const hand = hands[data?.data?.length - 1];
+  const hand = hands[data?.data?.length - 1] || hands[7];
 
   // ** Handlers
 
@@ -322,7 +322,7 @@ const TodoList = () => {
 
       <div className="flex items-center justify-center">
         <img src={hand} alt="hand" className="w-44 h-44" />
-      </div>
+      h</div>
 
       {isLoading ? (
         <div className="space-y-1">
@@ -330,7 +330,7 @@ const TodoList = () => {
             <TodoSkeleton key={i} />
           ))}
         </div>
-      ) : data.data?.length ? (
+      ) : data?.data?.length ? (
         <div className="space-y-3">{renderTodos}</div>
       ) : (
         <p>No todos found</p>

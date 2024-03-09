@@ -5,11 +5,9 @@ import Bg from "./assets/bg.png";
 const App = () => {
   return (
     <main 
-      className="bg-black-90 min-h-screen"
+      className="bg-black-90 bg-cover bg-center bg-repeat"
       style={{
         backgroundImage: `url(${Bg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
       }}
     >
       <RouterProvider router={router} />

@@ -8,17 +8,48 @@ interface IProps {
 }
 
 const Paginator = ({isLoading, onClickNext, onClickPrev, page, pageCount, total}: IProps) => {
+  
+  const beforeElementStyles: React.CSSProperties = {
+    content: '""',
+    position: 'absolute',
+    top: '0',
+    left: '0',
+    right: '0',
+    bottom: '0',
+    borderRadius: '0 50px 50px 0',
+    border: '2px solid transparent',
+    background: 'linear-gradient(315deg, rgba(255, 0, 194, 0.80) 0%, rgba(255, 77, 0, 0.80) 100%) border-box',
+    WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
+    WebkitMaskComposite: 'destination-out',
+    maskComposite: 'exclude',
+  };
+
+  const beforeElementStyles2: React.CSSProperties = {
+    content: '""',
+    position: 'absolute',
+    top: '0',
+    left: '0',
+    right: '0',
+    bottom: '0',
+    borderRadius: '50px 0 0 50px',
+    border: '2px solid transparent',
+    background: 'linear-gradient(315deg, rgba(255, 0, 194, 0.80) 0%, rgba(255, 77, 0, 0.80) 100%) border-box',
+    WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
+    WebkitMaskComposite: 'destination-out',
+    maskComposite: 'exclude',
+  };
+
   return (
     <div className="flex flex-col items-center space-y-5 mx-auto mt-10">
-      <p className="text-sm text-gray-600 mx-3">
-        Page <span className="mx-1 font-semibold text-gray-900 text-md">{page}</span> to
-        <span className="mx-1 font-semibold text-gray-900">{pageCount}</span> of
-        <span className="mx-1 font-semibold text-gray-900">{total}</span> Records
+      <p className="text-sm text-white font-SourceSerifPro mx-3 mt-4">
+        Octopus <span className="mx-1 font-semibold text-white text-md">{page}</span> to
+        <span className="mx-1 font-semibold text-white ">{pageCount}</span> of
+        <span className="mx-1 font-semibold text-white ">{total}</span> Tasks
       </p>
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
         <button
             type="button"
-            className="bg-gray-800 text-white rounded-l-md border-r border-gray-100 py-2 hover:bg-indigo-700 duration-300 hover:text-white px-3 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:hover:bg-gray-400"
+            className="relative text-white rounded-l-[50px] border-r border-gray-100 py-2 duration-300 hover:text-white px-3 disabled:cursor-not-allowed disabled:text-gray-700"
             disabled={page === 1 || isLoading}
             onClick={onClickPrev}
           >
@@ -32,11 +63,12 @@ const Paginator = ({isLoading, onClickNext, onClickPrev, page, pageCount, total}
               </svg>
               <p className="ml-2">Prev</p>
             </div>
+            <span style={beforeElementStyles2}></span>
           </button>
 
           <button
           type="button"
-          className="bg-gray-800 text-white rounded-r-md py-2 border-l border-gray-200 hover:bg-indigo-700 duration-300 hover:text-white px-3 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:hover:bg-gray-400"
+          className="relative text-white rounded-r-[50px] py-2 border-l border-gray-200 duration-300 hover:text-white px-3 disabled:cursor-not-allowed disabled:text-gray-700"
           disabled={page === pageCount || isLoading}
           onClick={onClickNext}
         >
@@ -50,6 +82,7 @@ const Paginator = ({isLoading, onClickNext, onClickPrev, page, pageCount, total}
               ></path>
             </svg>
           </div>
+          <span style={beforeElementStyles}></span>
         </button>
       </div>
     </div>
