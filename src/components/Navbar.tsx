@@ -50,18 +50,13 @@ const Navbar = () => {
         
         {
           userData ? (
-            <div className="flex items-center space-x-2 text-indigo-600">
-                <NavLink 
-                  to="/profile"
-                >
-                  Profile
-              </NavLink>
-
+            <div className="flex items-center space-x-2">
               <Button 
-                className="cursor-pointer" 
+                className="relative font-SourceSerifPro rounded-3xl w-24 text-center text-lg py-1 text-white md:text-md md:w-28"
                 onClick={handleLogout}
               >
                 Logout
+                <span style={beforeElementStyles}></span>
               </Button>
             </div>
           ) : (
