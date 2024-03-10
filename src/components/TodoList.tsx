@@ -319,38 +319,46 @@ const TodoList = () => {
 
   return (
     <div className="space-y-1 w-full flex flex-col items-center gap-10">
-      <div className="flex items-center justify-between space-x-2 w-full">
-        <div className="flex items-center justify-between space-x-2 text-md">
-          <select
-            className="bg-gradient-to-br from-pink-trans to-orange-trans hover:from-pink-500 hover:to-orange-500 rounded-lg py-2 px-3 focus:bg-gray-200 focus:text-white focus:outline-none"
-            value={sortBy}
-            onChange={onChangeSortBy}
-          >
-            <option disabled className="text-gray-500">
-              Sort by
-            </option>
-            <option value="ASC" className="text-gray-950">
-              Oldest
-            </option>
-            <option value="DESC" className="text-gray-950">
-              Latest
-            </option>
-          </select>
+      <div className="flex flex-col md:flex-row gap-3 justify-between space-x-2 w-full">
+        <div>
+          <h1 className="text-2xl font-bold text-white font-SourceSerifPro">
+            Finish your tasks, Kill Your Octopuses
+          </h1>
+          <h1 className="text-xl font-bold text-white font-SourceSerifPro">
+            You have {data?.meta?.pagination.pageCount} Octopuses, {data?.meta?.pagination.total} tasks
+          </h1>
         </div>
-        <Button 
-        className="bg-gradient-to-bl from-pink-trans to-orange-trans hover:from-pink-500 hover:to-orange-500 rounded-lg"
-          onClick={openAddModal}
-        >
-          <svg width="50" height="50" viewBox="0 0 33 33" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <mask id="mask0_200_6476" style={{maskType: "alpha"}}
-              maskUnits="userSpaceOnUse" x="0" y="0" width="33" height="33">
-              <rect x="0.29248" y="0.291992" width="32.4154" height="32.4154" fill="#D9D9D9"/>
-              </mask>
-              <g mask="url(#mask0_200_6476)">
-              <path d="M15.4874 17.5133H8.73417C8.44716 17.5133 8.20658 17.4162 8.01242 17.2219C7.81827 17.0277 7.72119 16.787 7.72119 16.4999C7.72119 16.2127 7.81827 15.9722 8.01242 15.7783C8.20658 15.5843 8.44716 15.4874 8.73417 15.4874H15.4874V8.73417C15.4874 8.44716 15.5845 8.20658 15.7787 8.01242C15.973 7.81827 16.2136 7.72119 16.5008 7.72119C16.7879 7.72119 17.0285 7.81827 17.2224 8.01242C17.4163 8.20658 17.5133 8.44716 17.5133 8.73417V15.4874H24.2665C24.5535 15.4874 24.7941 15.5845 24.9882 15.7787C25.1824 15.973 25.2795 16.2136 25.2795 16.5008C25.2795 16.7879 25.1824 17.0285 24.9882 17.2224C24.7941 17.4163 24.5535 17.5133 24.2665 17.5133H17.5133V24.2665C17.5133 24.5535 17.4162 24.7941 17.2219 24.9882C17.0277 25.1824 16.787 25.2795 16.4999 25.2795C16.2127 25.2795 15.9722 25.1824 15.7783 24.9882C15.5843 24.7941 15.4874 24.5535 15.4874 24.2665V17.5133Z" fill="white"/>
-              </g>
-              </svg>
-        </Button>
+        <div className="flex gap-5 justify-end items-center">
+            <select
+              className="bg-gradient-to-br from-pink-trans to-orange-trans hover:from-pink-500 hover:to-orange-500 rounded-lg py-2 px-3 focus:bg-gray-200 focus:text-white focus:outline-none"
+              value={sortBy}
+              onChange={onChangeSortBy}
+            >
+              <option disabled className="text-gray-500">
+                Sort by
+              </option>
+              <option value="ASC" className="text-gray-950">
+                Oldest
+              </option>
+              <option value="DESC" className="text-gray-950">
+                Latest
+              </option>
+            </select>
+            <Button 
+            className="bg-gradient-to-bl from-pink-trans to-orange-trans hover:from-pink-500 hover:to-orange-500 rounded-lg"
+              onClick={openAddModal}
+            >
+              <svg width="50" height="50" viewBox="0 0 33 33" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <mask id="mask0_200_6476" style={{maskType: "alpha"}}
+                  maskUnits="userSpaceOnUse" x="0" y="0" width="33" height="33">
+                  <rect x="0.29248" y="0.291992" width="32.4154" height="32.4154" fill="#D9D9D9"/>
+                  </mask>
+                  <g mask="url(#mask0_200_6476)">
+                  <path d="M15.4874 17.5133H8.73417C8.44716 17.5133 8.20658 17.4162 8.01242 17.2219C7.81827 17.0277 7.72119 16.787 7.72119 16.4999C7.72119 16.2127 7.81827 15.9722 8.01242 15.7783C8.20658 15.5843 8.44716 15.4874 8.73417 15.4874H15.4874V8.73417C15.4874 8.44716 15.5845 8.20658 15.7787 8.01242C15.973 7.81827 16.2136 7.72119 16.5008 7.72119C16.7879 7.72119 17.0285 7.81827 17.2224 8.01242C17.4163 8.20658 17.5133 8.44716 17.5133 8.73417V15.4874H24.2665C24.5535 15.4874 24.7941 15.5845 24.9882 15.7787C25.1824 15.973 25.2795 16.2136 25.2795 16.5008C25.2795 16.7879 25.1824 17.0285 24.9882 17.2224C24.7941 17.4163 24.5535 17.5133 24.2665 17.5133H17.5133V24.2665C17.5133 24.5535 17.4162 24.7941 17.2219 24.9882C17.0277 25.1824 16.787 25.2795 16.4999 25.2795C16.2127 25.2795 15.9722 25.1824 15.7783 24.9882C15.5843 24.7941 15.4874 24.5535 15.4874 24.2665V17.5133Z" fill="white"/>
+                  </g>
+                  </svg>
+            </Button>
+          </div>
       </div>
 
       {isLoading ? (
