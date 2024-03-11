@@ -6,7 +6,7 @@ import ErrorHandler from "../components/errors/ErrorHandler";
 import HomePage from "../pages";
 import LoginPage from "../pages/Login";
 import RegisterPage from "../pages/Register";
-import TodoList from "../components/TodoList";
+import TodoList from "../pages/TodoList";
 
 const storageKey = "loggedInUser";
 const userDataString = localStorage.getItem(storageKey);
