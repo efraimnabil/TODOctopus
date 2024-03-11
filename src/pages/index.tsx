@@ -34,7 +34,14 @@ const HomePage = () => {
               <h1 
                 className="text-3xl text-white font-SourceSerifPro md:text-4xl"
               >
-                Welcome to 
+                Welcome 
+                {
+                  userData?.jwt && userData?.user?.username &&
+                  <span className="mx-2">
+                    back {userData?.user?.username}
+                  </span>
+                }
+                to 
                 <span 
                   className="mx-2 text-pink-500 font-Sunshiney text-transparent bg-clip-text bg-gradient-to-br from-pink-trans to-orange-trans text-2xl font-normal tracking-widest"
                 >

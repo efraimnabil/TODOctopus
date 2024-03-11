@@ -160,11 +160,19 @@ const TodoList = () => {
       );
       if (status === 200) {
         closeAddModal();
+
         // ** Refetch the todos
         setQueryVersion((prev) => prev + 1);
       }
     } catch (error) {
       console.log(error);
+    }
+    finally {
+      setAddTodo({
+        id: 0,
+        title: "",
+        description: "",
+      });
     }
   };
 

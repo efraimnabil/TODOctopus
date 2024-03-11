@@ -126,7 +126,6 @@ const RegisterPage = () => {
         </p>
 
         <Button 
-          fullWidth 
           isLoading={isloading}
           className="bg-gradient-to-tl from-pink-trans to-orange-trans text-white rounded-3xl text-center text-lg py-2"
         >
