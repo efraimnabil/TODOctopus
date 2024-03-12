@@ -234,7 +234,7 @@ const TodoList = () => {
           </div>
       </div>
 
-      {1 ? (
+      {isLoading ? (
         <div className="space-y-1">
             <TodoSkeleton />
         </div>
