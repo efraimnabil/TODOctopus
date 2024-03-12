@@ -16,8 +16,17 @@ import hand5 from "../assets/hand5.svg";
 import hand6 from "../assets/hand6.svg";
 import hand7 from "../assets/hand7.svg";
 import hand8 from "../assets/hand8.svg";
+import plus from "../assets/plus.svg";
 import TodoItem from "../components/TodoItem";
+import beforeElementStyles from "../components/ui/GradientBorder";
+import Select from "../components/ui/Select";
 const TodoList = () => {
+  const SortByOptions = [
+    { id: 1, name: 'Newest', value: 'DESC' },
+    { id: 2, name: 'Oldest', value: 'ASC' }
+  ]
+
+  const [selected, setSelected] = useState(SortByOptions[0]);
   const storageKey = "loggedInUser";
   const userDataString = localStorage.getItem(storageKey);
   const userData = userDataString ? JSON.parse(userDataString) : null;
@@ -27,7 +36,6 @@ const TodoList = () => {
   const [isOpenAddModal, setIsOpenAddModal] = useState(false);
   const [queryVersion, setQueryVersion] = useState(1);
   const [page, setPage] = useState<number>(1);
-  const [sortBy, setSortBy] = useState<"DESC" | "ASC">("DESC");
   const [editTodo, setEditTodo] = useState<ITodo>({
     id: 0,
     title: "",
@@ -40,14 +48,15 @@ const TodoList = () => {
   });
   const { isLoading, data, isFetching } = useAuthQuery({
     // todoList+$todotoedit.id
-    queryKey: [`todos-page-${page}`, `${queryVersion}`, `${sortBy}`],
-    url: `/todos?pagination[pageSize]=${8}&pagination[page]=${page}&sort=createdAt:${sortBy}`,
+    queryKey: [`todos-page-${page}`, `${queryVersion}`, `${selected.value}`],
+    url: `/todos?pagination[pageSize]=${8}&pagination[page]=${page}&sort=createdAt:${selected.value}`,
     config: {
       headers: {
         Authorization: `Bearer ${userData?.jwt}`,
       },
     },
   });
+
   console.log(data);
 
   // map to know wich hand to use
@@ -62,10 +71,6 @@ const TodoList = () => {
 
   const onClickNext = () => {
     setPage((prev) => prev + 1);
-  };
-
-  const onChangeSortBy = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortBy(e.target.value as "DESC" | "ASC");
   };
 
   const onCloseEditModal = () => {
@@ -205,21 +210,7 @@ const TodoList = () => {
       />
     )
   );
-
-  const beforeElementStyles: React.CSSProperties = {
-    content: '""',
-    position: 'absolute',
-    top: '0',
-    left: '0',
-    right: '0',
-    bottom: '0',
-    borderRadius: '50px',
-    border: '2px solid transparent',
-    background: 'linear-gradient(315deg, rgba(255, 0, 194, 0.80) 0%, rgba(255, 77, 0, 0.80) 100%) border-box',
-    WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
-    WebkitMaskComposite: 'destination-out',
-    maskComposite: 'exclude',
-  };
+  
 
   return (
     <div className="space-y-1 w-full flex flex-col items-center gap-10">
@@ -233,43 +224,19 @@ const TodoList = () => {
           </h1>
         </div>
         <div className="flex gap-5 justify-end items-center">
-            <select
-              className="bg-gradient-to-br from-pink-trans to-orange-trans hover:from-pink-500 hover:to-orange-500 rounded-lg py-2 px-3 focus:bg-gray-200 focus:text-white focus:outline-none"
-              value={sortBy}
-              onChange={onChangeSortBy}
-            >
-              <option disabled className="text-gray-500">
-                Sort by
-              </option>
-              <option value="ASC" className="text-gray-950">
-                Oldest
-              </option>
-              <option value="DESC" className="text-gray-950">
-                Latest
-              </option>
-            </select>
+            <Select options={SortByOptions} selected={selected} setSelected={setSelected} />
             <Button 
-            className="bg-gradient-to-bl from-pink-trans to-orange-trans hover:from-pink-500 hover:to-orange-500 rounded-lg"
+              className="text-white bg-gradient-to-bl from-pink-trans to-orange-trans hover:from-pink-500 hover:to-orange-500 rounded-lg"
               onClick={openAddModal}
             >
-              <svg width="50" height="50" viewBox="0 0 33 33" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <mask id="mask0_200_6476" style={{maskType: "alpha"}}
-                  maskUnits="userSpaceOnUse" x="0" y="0" width="33" height="33">
-                  <rect x="0.29248" y="0.291992" width="32.4154" height="32.4154" fill="#D9D9D9"/>
-                  </mask>
-                  <g mask="url(#mask0_200_6476)">
-                  <path d="M15.4874 17.5133H8.73417C8.44716 17.5133 8.20658 17.4162 8.01242 17.2219C7.81827 17.0277 7.72119 16.787 7.72119 16.4999C7.72119 16.2127 7.81827 15.9722 8.01242 15.7783C8.20658 15.5843 8.44716 15.4874 8.73417 15.4874H15.4874V8.73417C15.4874 8.44716 15.5845 8.20658 15.7787 8.01242C15.973 7.81827 16.2136 7.72119 16.5008 7.72119C16.7879 7.72119 17.0285 7.81827 17.2224 8.01242C17.4163 8.20658 17.5133 8.44716 17.5133 8.73417V15.4874H24.2665C24.5535 15.4874 24.7941 15.5845 24.9882 15.7787C25.1824 15.973 25.2795 16.2136 25.2795 16.5008C25.2795 16.7879 25.1824 17.0285 24.9882 17.2224C24.7941 17.4163 24.5535 17.5133 24.2665 17.5133H17.5133V24.2665C17.5133 24.5535 17.4162 24.7941 17.2219 24.9882C17.0277 25.1824 16.787 25.2795 16.4999 25.2795C16.2127 25.2795 15.9722 25.1824 15.7783 24.9882C15.5843 24.7941 15.4874 24.5535 15.4874 24.2665V17.5133Z" fill="white"/>
-                  </g>
-                  </svg>
+              <img src={plus} alt="add" className="w-10 h-10" />
             </Button>
           </div>
       </div>
 
-      {isLoading ? (
+      {1 ? (
         <div className="space-y-1">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <TodoSkeleton key={i} />
-          ))}
+            <TodoSkeleton />
         </div>
       ) : data?.data?.length ? (
         <div className="flex flex-col w-full items-center justify-center gap-3 md:relative">

@@ -1,3 +1,5 @@
+import hand8 from '../assets/hand8.svg'
+
 interface IProps {
 
 }
@@ -5,11 +7,11 @@ interface IProps {
 const TodoSkeleton = ({}: IProps) => {
   return (
     <div className="flex items-center justify-between">
-        <div className="w-32 h-2 bg-gray-200 rounded-full dark:bg-gray-400"></div>
-        <div className="flex items-center space-x-2">
-            <div className="h-9 w-20 bg-gray-300 rounded-md dark:bg-gray-400"></div>
-            <div className="h-9 w-20 bg-gray-300 rounded-md dark:bg-gray-400"></div>
-        </div>
+      <img 
+        src={hand8}
+        alt="hand"
+        className="w-40 h-40 md:w-80 md:h-80 animate-pulse"
+      />
     </div>
   )
 }
