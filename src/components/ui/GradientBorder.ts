@@ -1,6 +1,6 @@
 import { CSSProperties } from "react";
 
-const beforeElementStyles: CSSProperties = {
+const GradientBorder: CSSProperties = {
   content: '""',
   position: 'absolute',
   top: '0',
@@ -15,4 +15,4 @@ const beforeElementStyles: CSSProperties = {
   maskComposite: 'exclude',
 };
 
-export default beforeElementStyles;
+export default GradientBorder;

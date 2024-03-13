@@ -18,12 +18,14 @@ import hand7 from "../assets/hand7.svg";
 import hand8 from "../assets/hand8.svg";
 import plus from "../assets/plus.svg";
 import TodoItem from "../components/TodoItem";
-import beforeElementStyles from "../components/ui/GradientBorder";
+import GradientBorder from "../components/ui/GradientBorder";
 import Select from "../components/ui/Select";
 const TodoList = () => {
   const SortByOptions = [
-    { id: 1, name: 'Newest', value: 'DESC' },
-    { id: 2, name: 'Oldest', value: 'ASC' }
+    { id: 1, name: 'Newest', value: 'createdat' },
+    { id: 2, name: 'Oldest', value: '-createdat' },
+    { id: 3, name: 'highest priority', value: 'priority' },
+    { id: 4, name: 'lowest priority', value: '-priority' },
   ]
 
   const [selected, setSelected] = useState(SortByOptions[0]);
@@ -37,19 +39,21 @@ const TodoList = () => {
   const [queryVersion, setQueryVersion] = useState(1);
   const [page, setPage] = useState<number>(1);
   const [editTodo, setEditTodo] = useState<ITodo>({
-    id: 0,
+    id: "",
     title: "",
     description: "",
+    priority: "1",
   });
   const [addTodo, setAddTodo] = useState<ITodo>({
-    id: 0,
+    id: "",
     title: "",
     description: "",
+    priority: "1",
   });
   const { isLoading, data, isFetching } = useAuthQuery({
     // todoList+$todotoedit.id
     queryKey: [`todos-page-${page}`, `${queryVersion}`, `${selected.value}`],
-    url: `/todos?pagination[pageSize]=${8}&pagination[page]=${page}&sort=createdAt:${selected.value}`,
+    url: `/tasks/tasks?page=${page}&sort=${selected.value}`,
     config: {
       headers: {
         Authorization: `Bearer ${userData?.token}`,
@@ -57,11 +61,9 @@ const TodoList = () => {
     },
   });
 
-  console.log(data);
-
   // map to know wich hand to use
   const hands = [hand1, hand2, hand3, hand4, hand5, hand6, hand7, hand8];
-  const hand = hands[data?.data?.length - 1] || hands[7];
+  const hand = hands[data?.tasks?.length - 1] || hands[7];
 
   // ** Handlers
 
@@ -75,15 +77,17 @@ const TodoList = () => {
 
   const onCloseEditModal = () => {
     setEditTodo({
-      id: 0,
+      id: "",
       title: "",
       description: "",
+      priority: "1",
     });
     setIsEditModalOpen(false);
   };
 
   const onOpenEditModal = (todo: ITodo) => {
     setEditTodo(todo);
+    console.log(todo.id);
     setIsEditModalOpen(true);
   };
 
@@ -93,6 +97,7 @@ const TodoList = () => {
 
   const openConfirmModal = (todo: ITodo) => {
     setEditTodo(todo);
+    console.log(todo);
     setIsOpenConfirmModal(true);
   };
 
@@ -121,13 +126,13 @@ const TodoList = () => {
     e.preventDefault();
     setIsUpdating(true);
     try {
-      const { status } = await axiosInstance.put(
-        `/todos/${editTodo.id}`,
+      const { status } = await axiosInstance.patch(
+        `/tasks/task/${editTodo.id}`,
         {
-          data: {
-            title: editTodo.title,
-            description: editTodo.description,
-          },
+          title: editTodo.title,
+          description: editTodo.description,
+          priority: editTodo.priority,
+          _id: userData?.user?._id
         },
         {
           headers: {
@@ -149,14 +154,13 @@ const TodoList = () => {
   const handleAddTodoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const { status } = await axiosInstance.post(
-        `/todos`,
+      const {status} = await axiosInstance.post(
+        `/tasks/task`,
         {
-          data: {
             title: addTodo.title,
             description: addTodo.description,
-            user: [userData.user.id],
-          },
+            priority: addTodo.priority,
+            _id: userData?.user?._id
         },
         {
           headers: {
@@ -164,54 +168,62 @@ const TodoList = () => {
           },
         }
       );
-      if (status === 200) {
+      if (status === 201) {
         closeAddModal();
 
         // ** Refetch the todos
         setQueryVersion((prev) => prev + 1);
       }
     } catch (error) {
+      console.log(userData.user._id);
       console.log(error);
     }
     finally {
       setAddTodo({
-        id: 0,
+        id: "",
         title: "",
         description: "",
+        priority: "1",
       });
     }
   };
 
   const onSubmitRemoveTodo = async () => {
     try {
-      const { status } = await axiosInstance.delete(`/todos/${editTodo.id}`, {
+      console.log(editTodo);
+      const { status } = await axiosInstance.delete(`/tasks/task/${editTodo.id}`, {
+        data: {
+          userId: userData?.id,
+        },
         headers: {
           Authorization: `Bearer ${userData?.token}`,
         },
       });
-      if (status === 200) {
+      if (status === 204) {
         closeConfirmModal();
         // ** Refetch the todos
         setQueryVersion((prev) => prev + 1);
       }
-    } catch (error) {}
+    } catch (error) {
+      console.log(error);
+    }
   };
 
-  const renderTodos = data?.data?.map(
-    ({ id, attributes }: { id: number; attributes: ITodo }, idx: number) => (
+  const renderTodos = data?.tasks?.map(
+    ({ _id, attributes, }: { _id: string; attributes: ITodo }, idx: number) => (
       <TodoItem
-        key={id}
-        id={id}
+        key={_id}
+        _id={_id}
         idx={idx}
+        Priority={attributes.priority}
         title={attributes.title}
         description={attributes.description}
-        onOpenEditModal={() => onOpenEditModal(attributes)}
-        openConfirmModal={() => openConfirmModal(attributes)}
+        onOpenEditModal={() => onOpenEditModal({ ...attributes, id: _id })}
+        openConfirmModal={() => openConfirmModal({ ...attributes, id: _id })}
       />
     )
   );
   
-
   return (
     <div className="space-y-1 w-full flex flex-col items-center gap-10">
       <div className="flex flex-col md:flex-row gap-3 justify-between space-x-2 w-full">
@@ -220,7 +232,7 @@ const TodoList = () => {
             Finish your tasks, Kill Your Octopuses
           </h1>
           <h1 className="text-xl font-bold text-white font-SourceSerifPro">
-            You have {data?.meta?.pagination.pageCount} Octopuses, {data?.meta?.pagination.total} tasks
+            You have {data?.pagination.pageCount} Octopuses, {data?.pagination.total} tasks
           </h1>
         </div>
         <div className="flex gap-5 justify-end items-center">
@@ -238,12 +250,14 @@ const TodoList = () => {
         <div className="space-y-1">
             <TodoSkeleton />
         </div>
-      ) : data?.data?.length ? (
+      ) : data?.tasks?.length ? (
         <div className="flex flex-col w-full items-center justify-center gap-3 md:relative">
           
           <img src={hand} alt="hand" className="w-44 h-44 md:w-60 md:h-60 lg:w-72 lg:h-72 xl:w-96 xl:h-96" />
-          
-          {renderTodos}</div>
+
+          {renderTodos}
+
+        </div>
       ) : (
         <div className="flex flex-col items-center justify-center gap-3">
           <h1 className="text-2xl font-bold text-white font-SourceSerifPro">
@@ -252,11 +266,11 @@ const TodoList = () => {
         </div>
       )}
       {
-        data?.data?.length ? (
+        data?.tasks?.length ? (
           <Paginator
             page={page}
-            pageCount={data?.meta?.pagination.pageCount}
-            total={data?.meta?.pagination.total}
+            pageCount={data?.pagination.pageCount}
+            total={data?.pagination.total}
             isLoading={isLoading || isFetching}
             onClickPrev={onClickPrev}
             onClickNext={onClickNext}
@@ -270,18 +284,64 @@ const TodoList = () => {
         title="Add Todo"
       >
         <form className="space-y-3" onSubmit={handleAddTodoSubmit}>
-          <Input
-            value={addTodo.title}
-            name="title"
-            placeholder="Title"
-            onChange={handleAddTodoChange}
-          />
-          <Textarea
-            value={addTodo.description}
-            name="description"
-            placeholder="Description"
-            onChange={handleAddTodoChange}
-          />
+          <div className="space-y-1">
+            <label htmlFor="title" className="text-sm font-SourceSerifPro ml-1 font-medium text-gray-900 dark:text-gray-300">Title</label>
+            <Input
+              value={addTodo.title}
+              required
+              name="title"
+              placeholder="Title"
+              onChange={handleAddTodoChange}
+            />
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="priority" className="text-sm font-SourceSerifPro ml-1 font-medium text-gray-900 dark:text-gray-300">Priority</label>
+            <div className="flex items-center space-x-3">
+             <div className="flex items-center space-x-3">
+                <input
+                  type="radio"
+                  id="1"
+                  name="priority"
+                  value="1"
+                  checked={addTodo.priority === "1"}
+                  onChange={handleAddTodoChange}
+                />
+                <label htmlFor="1" className="text-sm font-SourceSerifPro ml-1 font-medium text-gray-900 dark:text-gray-300">1</label>
+              </div>
+              <div className="flex items-center space-x-3">
+                <input
+                  type="radio"
+                  id="2"
+                  name="priority"
+                  value="2"
+                  checked={addTodo.priority === "2"}
+                  onChange={handleAddTodoChange}
+                />
+                <label htmlFor="2" className="text-sm font-SourceSerifPro ml-1 font-medium text-gray-900 dark:text-gray-300">2</label>
+              </div>
+              <div className="flex items-center space-x-3">
+                <input
+                  type="radio"
+                  id="3"
+                  name="priority"
+                  value="3"
+                  checked={addTodo.priority === "3"}
+                  onChange={handleAddTodoChange}
+                />
+                <label htmlFor="3" className="text-sm font-SourceSerifPro ml-1 font-medium text-gray-900 dark:text-gray-300">3</label>
+              </div>
+            </div>
+
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="description" className="text-sm font-SourceSerifPro ml-1 font-medium text-gray-900 dark:text-gray-300">Description</label>
+            <Textarea
+              value={addTodo.description}
+              name="description"
+              placeholder="Description"
+              onChange={handleAddTodoChange}
+            />
+          </div>
           <div className="flex justify-start space-x-3 mt-4">
             <Button 
               className="bg-gradient-to-br from-pink-trans to-orange-trans text-white rounded-3xl w-24 text-center text-lg py-1 md:text-md md:w-28 font-SourceSerifPro"
@@ -294,7 +354,7 @@ const TodoList = () => {
               type="button"
             >
               Cancel
-              <span style={beforeElementStyles}></span>
+              <span style={GradientBorder}></span>
             </Button>
           </div>
         </form>
@@ -307,18 +367,62 @@ const TodoList = () => {
         title="Edit Todo"
       >
         <form className="space-y-3" onSubmit={handleEditTodoSubmit}>
-          <Input
-            value={editTodo.title}
-            name="title"
-            placeholder="Title"
-            onChange={handleEditTodoChange}
-          />
-          <Textarea
-            value={editTodo.description}
-            name="description"
-            placeholder="Description"
-            onChange={handleEditTodoChange}
-          />
+          <div className="space-y-1">
+            <label htmlFor="title" className="text-sm font-SourceSerifPro ml-1 font-medium text-gray-900 dark:text-gray-300">Title</label>
+            <Input
+              value={editTodo.title}
+              name="title"
+              placeholder="Title"
+              onChange={handleEditTodoChange}
+            />
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="priority" className="text-sm font-SourceSerifPro ml-1 font-medium text-gray-900 dark:text-gray-300">Priority</label>
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3">
+                <input
+                  type="radio"
+                  id="1"
+                  name="priority"
+                  value="1"
+                  checked={editTodo.priority === "1"}
+                  onChange={handleEditTodoChange}
+                />
+                <label htmlFor="1" className="text-sm font-SourceSerifPro ml-1 font-medium text-gray-900 dark:text-gray-300">1</label>
+              </div>
+              <div className="flex items-center space-x-3">
+                <input
+                  type="radio"
+                  id="2"
+                  name="priority"
+                  value="2"
+                  checked={editTodo.priority === "2"}
+                  onChange={handleEditTodoChange}
+                />
+                <label htmlFor="2" className="text-sm font-SourceSerifPro ml-1 font-medium text-gray-900 dark:text-gray-300">2</label>
+              </div>
+              <div className="flex items-center space-x-3">
+                <input
+                  type="radio"
+                  id="3"
+                  name="priority"
+                  value="3"
+                  checked={editTodo.priority === "3"}
+                  onChange={handleEditTodoChange}
+                />
+                <label htmlFor="3" className="text-sm font-SourceSerifPro ml-1 font-medium text-gray-900 dark:text-gray-300">3</label>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="description" className="text-sm font-SourceSerifPro ml-1 font-medium text-gray-900 dark:text-gray-300">Description</label>
+              <Textarea
+              value={editTodo.description}
+              name="description"
+              placeholder="Description"
+              onChange={handleEditTodoChange}
+            />
+          </div>
           <div className="flex justify-start space-x-3 mt-4">
             <Button className="bg-gradient-to-br from-pink-trans to-orange-trans text-white rounded-3xl w-24 text-center text-lg py-1 md:text-md md:w-28 font-SourceSerifPro" isLoading={isUpdating}>
               Update
@@ -329,7 +433,7 @@ const TodoList = () => {
               type="button"
             >
               Cancel
-              <span style={beforeElementStyles}></span>
+              <span style={GradientBorder}></span>
             </Button>
           </div>
         </form>
@@ -355,7 +459,7 @@ const TodoList = () => {
             type="button"
           >
             Cancel
-            <span style={beforeElementStyles}></span>
+            <span style={GradientBorder}></span>
           </Button>
         </div>
       </Modal>

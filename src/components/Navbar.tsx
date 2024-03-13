@@ -1,27 +1,48 @@
 import toast from "react-hot-toast";
 import { NavLink, useLocation } from "react-router-dom";
 import Button from "./ui/Button";
+import axiosInstance from "../config/axios.config";
+import { useState } from "react";
 
 const Navbar = () => {
   const { pathname } = useLocation();
   const storageKey = "loggedInUser";
   const userDataString = localStorage.getItem(storageKey);
   const userData = userDataString ? JSON.parse(userDataString) : null;
-
-  const handleLogout = () => {
-    localStorage.removeItem(storageKey);
-    toast ('You are logged out', {
-      position: 'top-center',
-      style: {
-        backgroundColor: 'black',
-        color: '#fff',
-        width: 'fit-content',
+  const [isloading, setIsLoading] = useState(false);
+  const handleLogout = async () => {
+    try {
+      setIsLoading(true);
+      const {status} = await axiosInstance.get('/users/logout');
+      if(status === 200){
+        localStorage.removeItem(storageKey);
+        toast ('You are logged out', {
+          position: 'top-center',
+          style: {
+            backgroundColor: 'black',
+            color: '#fff',
+            width: 'fit-content',
+          }
+        });
+        setTimeout(() => {
+          location.replace(pathname);
+        }
+        , 1500);
       }
-    });
-    setTimeout(() => {
-      location.replace(pathname);
+    } catch (error) {
+      toast.error('Something went wrong', {
+        position: 'top-center',
+        style: {
+          backgroundColor: 'black',
+          color: '#fff',
+          width: 'fit-content',
+        }
+      });
     }
-    , 1500);
+    finally {
+      setIsLoading(false);
+    }
+
   }
 
   const beforeElementStyles: React.CSSProperties = {
@@ -54,6 +75,7 @@ const Navbar = () => {
               <Button 
                 className="relative font-SourceSerifPro rounded-3xl w-24 text-center text-lg py-1 text-white md:text-md md:w-28"
                 onClick={handleLogout}
+                isLoading={isloading}
               >
                 Logout
                 <span style={beforeElementStyles}></span>

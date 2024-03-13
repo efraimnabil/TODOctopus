@@ -1,28 +1,32 @@
 import Button from "./ui/Button";
 import Pen from "./ui/Pen";
 interface IProps {
-  id: number;
+  _id: string;
   title: string;
   description: string;
-  Priority?: number;
+  Priority?: string;
   idx: number;
+
   openConfirmModal: (todo: {
-    id: number;
+    _id: string;
     title: string;
     description: string;
+    priority: string;
   }) => void;
+  
   onOpenEditModal: (todo: {
-    id: number;
+    id: string;
     title: string;
     description: string;
+    priority: string;
   }) => void;
 }
 
 const TodoItem = ({
-  id,
+  _id,
   title,
   description,
-  Priority = 3,
+  Priority = "2",
   idx,
   openConfirmModal,
   onOpenEditModal,
@@ -62,7 +66,7 @@ const TodoItem = ({
 
   return (
     <div
-      key={id}
+      key={_id}
       className={`flex w-full items-center justify-between bg-gradient-to-br from-transparent via-transparent to-todo-bg backdrop-blur-md duration-300 px-3 py-2 md:py-1 lg:py-2 shadow-custom-orange rounded-2xl md:absolute md:w-52 lg:w-60 xl:w-80 ${todosPostionsMd[idx]} ${todosPostionsLg[idx]} ${todosPostionsXl[idx]}`}
     >
 
@@ -73,26 +77,33 @@ const TodoItem = ({
         {/* delete */}
         <Button
           onClick={() =>
-            openConfirmModal({
-              id,
-              title: title,
-              description: description,
-            })
+            openConfirmModal(
+              {
+                _id: _id,
+                title: title,
+                description: description,
+                priority: Priority,
+              })
           }
         >
           <span 
-            className={`w-7 h-7 rounded-full border-2 ${Priority === 3 ? "border-red-500" : Priority === 2 ? "border-yellow-500" : Priority === 1 ? "border-green-500" : ""
+            className={`w-7 h-7 rounded-full border-2 ${Priority === "3" ? "border-red-500" : Priority === "2" ? "border-yellow-500" : Priority === "1" ? "border-green-500" : ""
             } flex items-center justify-center`}
           ></span>
         </Button>
 
         <Button
           onClick={() =>
-            onOpenEditModal({
-              id,
-              title: title,
-              description: description,
-            })
+            
+            {
+              console.log("id", _id);
+              onOpenEditModal({
+                id: _id,
+                title: title,
+                description: description,
+                priority: Priority,
+              })
+            }
           }
         >
           <Pen />
