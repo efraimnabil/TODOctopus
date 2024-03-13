@@ -21,14 +21,7 @@ export interface ILoginInput {
 }
 
 export interface IErrorRes{
-    error: {
-        // details?: {
-        //     errors: {
-        //         message: string;
-        //     }[];
-        // };
-        message?: string;
-    };
+    message?: string;
 }
 
 export interface ITodo {

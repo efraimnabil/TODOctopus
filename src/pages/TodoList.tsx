@@ -245,16 +245,24 @@ const TodoList = () => {
           
           {renderTodos}</div>
       ) : (
-        <p>No todos found</p>
+        <div className="flex flex-col items-center justify-center gap-3">
+          <h1 className="text-2xl font-bold text-white font-SourceSerifPro">
+            No Octopus found
+          </h1>
+        </div>
       )}
-      <Paginator
-        page={page}
-        pageCount={data?.meta?.pagination.pageCount}
-        total={data?.meta?.pagination.total}
-        isLoading={isLoading || isFetching}
-        onClickPrev={onClickPrev}
-        onClickNext={onClickNext}
-      />
+      {
+        data?.data?.length ? (
+          <Paginator
+            page={page}
+            pageCount={data?.meta?.pagination.pageCount}
+            total={data?.meta?.pagination.total}
+            isLoading={isLoading || isFetching}
+            onClickPrev={onClickPrev}
+            onClickNext={onClickNext}
+          />
+        ) : null
+      }
       {/* Add todo Modal */}
       <Modal
         isOpen={isOpenAddModal}

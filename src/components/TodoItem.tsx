@@ -4,6 +4,7 @@ interface IProps {
   id: number;
   title: string;
   description: string;
+  Priority?: number;
   idx: number;
   openConfirmModal: (todo: {
     id: number;
@@ -21,6 +22,7 @@ const TodoItem = ({
   id,
   title,
   description,
+  Priority = 3,
   idx,
   openConfirmModal,
   onOpenEditModal,
@@ -63,6 +65,7 @@ const TodoItem = ({
       key={id}
       className={`flex w-full items-center justify-between bg-gradient-to-br from-transparent via-transparent to-todo-bg backdrop-blur-md duration-300 px-3 py-2 md:py-1 lg:py-2 shadow-custom-orange rounded-2xl md:absolute md:w-52 lg:w-60 xl:w-80 ${todosPostionsMd[idx]} ${todosPostionsLg[idx]} ${todosPostionsXl[idx]}`}
     >
+
       <p className="w-full font-semibold text-white font-SourceSerifPro">
         {title}
       </p>
@@ -77,7 +80,10 @@ const TodoItem = ({
             })
           }
         >
-          <span className="w-8 h-8 rounded-full border border-white flex items-center justify-center"></span>
+          <span 
+            className={`w-7 h-7 rounded-full border-2 ${Priority === 3 ? "border-red-500" : Priority === 2 ? "border-yellow-500" : Priority === 1 ? "border-green-500" : ""
+            } flex items-center justify-center`}
+          ></span>
         </Button>
 
         <Button

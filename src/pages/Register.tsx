@@ -36,7 +36,7 @@ const RegisterPage = () => {
     setIsLoading(true);
 
     try {
-      const {status} = await axiosInstance.post('/auth/local/register', data);
+      const {status} = await axiosInstance.post('/users/signup', data);
       console.log(status);
       if (status === 200) {
         toast.success('You will be redirected to login page after 3 seconds',{
@@ -54,8 +54,9 @@ const RegisterPage = () => {
       }
       
     } catch (err) {
+      console.log(err);
       const errorObj = err as AxiosError<IErrorRes>;
-      const message = errorObj.response?.data.error.message || 'Something went wrong';
+      const message = errorObj.response?.data?.message || 'Something went wrong';
       toast.error(message, {
         position: 'top-center',
         style: {
