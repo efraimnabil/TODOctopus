@@ -52,7 +52,7 @@ const TodoList = () => {
     url: `/todos?pagination[pageSize]=${8}&pagination[page]=${page}&sort=createdAt:${selected.value}`,
     config: {
       headers: {
-        Authorization: `Bearer ${userData?.jwt}`,
+        Authorization: `Bearer ${userData?.token}`,
       },
     },
   });
@@ -131,7 +131,7 @@ const TodoList = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${userData?.jwt}`,
+            Authorization: `Bearer ${userData?.token}`,
           },
         }
       );
@@ -160,7 +160,7 @@ const TodoList = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${userData?.jwt}`,
+            Authorization: `Bearer ${userData?.token}`,
           },
         }
       );
@@ -186,7 +186,7 @@ const TodoList = () => {
     try {
       const { status } = await axiosInstance.delete(`/todos/${editTodo.id}`, {
         headers: {
-          Authorization: `Bearer ${userData?.jwt}`,
+          Authorization: `Bearer ${userData?.token}`,
         },
       });
       if (status === 200) {

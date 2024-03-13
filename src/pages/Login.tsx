@@ -13,7 +13,7 @@ import { IErrorRes } from "../interfaces";
 import { Link } from "react-router-dom";
 
 interface IFormInput {
-  identifier: string;
+  email: string;
   password: string;
 }
 
@@ -45,14 +45,12 @@ const LoginPage = () => {
   };
 
   // ** Handlers
-  const onSubmit: SubmitHandler<IFormInput> = async (data) => {
-    console.log(data);
+  const onSubmit: SubmitHandler<IFormInput> = async (loginData) => {
+    console.log(loginData);
     setIsLoading(true);
 
     try {
-      const {status, data: resData} = await axiosInstance.post('/auth/local', data);
-      console.log(status);
-      console.log(resData);
+      const {status, data} =  await axiosInstance.post('/users/login', loginData);
       if (status === 200) {
         toast.success('You are logged in, We will redirect you to home page in 2 seconds', {
           position: 'top-center',
@@ -63,7 +61,7 @@ const LoginPage = () => {
           }
         });
 
-        localStorage.setItem('loggedInUser', JSON.stringify(resData));
+        localStorage.setItem('loggedInUser', JSON.stringify(data));
 
         setTimeout(() => {
           location.replace('/');
@@ -72,7 +70,7 @@ const LoginPage = () => {
 
     } catch (err) {
       const errorObj = err as AxiosError<IErrorRes>;
-      const message = errorObj.response?.data.error.message || 'Something went wrong';
+      const message = errorObj.response?.data?.message || 'Something went wrong';
       toast.error(message, {
         position: 'top-center',
         style: {

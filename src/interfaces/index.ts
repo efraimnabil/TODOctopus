@@ -10,7 +10,7 @@ export interface IRegisterInput {
 }
 
 export interface ILoginInput {
-    name: "identifier" | "password";
+    name: "email" | "password";
     placeholder: string;
     type: string;
     validation: {

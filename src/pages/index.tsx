@@ -36,7 +36,7 @@ const HomePage = () => {
               >
                 Welcome 
                 {
-                  userData?.jwt && userData?.user?.username &&
+                  userData?.token && userData?.user?.username &&
                   <span className="mx-2">
                     back {userData?.user?.username}
                   </span>
@@ -66,7 +66,7 @@ const HomePage = () => {
               </p>
 
               <Link
-                to={userData?.jwt ? "/TODOctopus" : "/login"}
+                to={userData?.token ? "/TODOctopus" : "/login"}
                 className="relative mt-5 text-white font-SourceSerifPro py-2 px-4 w-52 text-center md:w-60 md:text-xl"
               >
                 Let's start

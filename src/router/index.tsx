@@ -26,7 +26,7 @@ const router = createBrowserRouter(
         <Route
           path="login"
           element={
-            <ProtectedRoute isAllowed={!userData?.jwt} redirectPath="/" data={userData}>
+            <ProtectedRoute isAllowed={!userData?.token} redirectPath="/" data={userData}>
               <LoginPage />
             </ProtectedRoute>
           }
@@ -34,7 +34,7 @@ const router = createBrowserRouter(
         <Route
           path="register"
           element={
-            <ProtectedRoute isAllowed={!userData?.jwt} redirectPath="/login" data={userData}>
+            <ProtectedRoute isAllowed={!userData?.token} redirectPath="/login" data={userData}>
               <RegisterPage />
             </ProtectedRoute>
           }
@@ -42,7 +42,7 @@ const router = createBrowserRouter(
         <Route
           path="TODOctopus"
           element={
-            <ProtectedRoute isAllowed={userData?.jwt} redirectPath="/login" data={userData}>
+            <ProtectedRoute isAllowed={userData?.token} redirectPath="/login" data={userData}>
               <TodoList />
             </ProtectedRoute>
           }
