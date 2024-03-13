@@ -20,10 +20,11 @@ import plus from "../assets/plus.svg";
 import TodoItem from "../components/TodoItem";
 import GradientBorder from "../components/ui/GradientBorder";
 import Select from "../components/ui/Select";
+import toast from "react-hot-toast";
 const TodoList = () => {
   const SortByOptions = [
-    { id: 1, name: 'Newest', value: 'createdat' },
-    { id: 2, name: 'Oldest', value: '-createdat' },
+    { id: 1, name: 'Newest', value: 'createdAt' },
+    { id: 2, name: 'Oldest', value: '-createdAt' },
     { id: 3, name: 'highest priority', value: 'priority' },
     { id: 4, name: 'lowest priority', value: '-priority' },
   ]
@@ -34,6 +35,8 @@ const TodoList = () => {
   const userData = userDataString ? JSON.parse(userDataString) : null;
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const [isOpenConfirmModal, setIsOpenConfirmModal] = useState(false);
   const [isOpenAddModal, setIsOpenAddModal] = useState(false);
   const [queryVersion, setQueryVersion] = useState(1);
@@ -132,7 +135,6 @@ const TodoList = () => {
           title: editTodo.title,
           description: editTodo.description,
           priority: editTodo.priority,
-          _id: userData?.user?._id
         },
         {
           headers: {
@@ -141,11 +143,13 @@ const TodoList = () => {
         }
       );
       if (status === 200) {
+        toast.success("Todo updated successfully");
         onCloseEditModal();
         // ** Refetch the todos
         setQueryVersion((prev) => prev + 1);
       }
     } catch (error) {
+      toast.error("Failed to update todo, please try again");
     } finally {
       setIsUpdating(false);
     }
@@ -153,6 +157,7 @@ const TodoList = () => {
 
   const handleAddTodoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsAdding(true);
     try {
       const {status} = await axiosInstance.post(
         `/tasks/task`,
@@ -171,12 +176,13 @@ const TodoList = () => {
       if (status === 201) {
         closeAddModal();
 
-        // ** Refetch the todos
+        if (data?.tasks?.length === 8) {
+          setPage((prev) => prev + 1);
+        }
         setQueryVersion((prev) => prev + 1);
       }
     } catch (error) {
-      console.log(userData.user._id);
-      console.log(error);
+      toast.error("Failed to add todo, please try again");
     }
     finally {
       setAddTodo({
@@ -185,12 +191,13 @@ const TodoList = () => {
         description: "",
         priority: "1",
       });
+      setIsAdding(false);
     }
   };
 
   const onSubmitRemoveTodo = async () => {
     try {
-      console.log(editTodo);
+      setIsRemoving(true);
       const { status } = await axiosInstance.delete(`/tasks/task/${editTodo.id}`, {
         data: {
           userId: userData?.id,
@@ -201,11 +208,20 @@ const TodoList = () => {
       });
       if (status === 204) {
         closeConfirmModal();
-        // ** Refetch the todos
+        toast.success("Todo removed successfully");
+        if (data?.tasks?.length === 1) {
+          toast.success("You Killed an Octopus 🐙");
+          if (page > 1) {
+            setPage((prev) => prev - 1);
+          }
+        }
         setQueryVersion((prev) => prev + 1);
       }
     } catch (error) {
-      console.log(error);
+      toast.error("Failed to remove todo, please try again");
+    }
+    finally {
+      setIsRemoving(false);
     }
   };
 
@@ -345,6 +361,7 @@ const TodoList = () => {
           <div className="flex justify-start space-x-3 mt-4">
             <Button 
               className="bg-gradient-to-br from-pink-trans to-orange-trans text-white rounded-3xl w-24 text-center text-lg py-1 md:text-md md:w-28 font-SourceSerifPro"
+              isLoading={isAdding}
             >
               Add
             </Button>
@@ -450,6 +467,7 @@ const TodoList = () => {
           <Button 
           className="bg-red-600 hover:bg-red-700 text-white rounded-xl w-28 text-center text-lg py-1 md:text-md md:w-32 font-SourceSerifPro"
             onClick={onSubmitRemoveTodo}
+            isLoading={isRemoving}
           >
             Yes, remove
           </Button>

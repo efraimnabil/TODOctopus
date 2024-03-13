@@ -1,11 +1,22 @@
 import octopus from "../assets/octopus.svg";
 import hand from "../assets/hand.svg"
 import { Link } from "react-router-dom";
+import axiosInstance from "../config/axios.config";
 const HomePage = () => {
   const storageKey = "loggedInUser";
   const userDataString = localStorage.getItem(storageKey);
   const userData = userDataString ? JSON.parse(userDataString) : null;
+  const getKilledOctopuses = async () => {
+    try {
+      const res = await axiosInstance.get("/tasks/getKilledOctopuses");
+      console.log(res);
+    } catch (error) {
+      console.log(error);
+    }
 
+  }
+
+  getKilledOctopuses();
   const beforeElementStyles: React.CSSProperties = {
     content: '""',
     position: 'absolute',
@@ -48,22 +59,44 @@ const HomePage = () => {
                   TODOctopus
                 </span>
               </h1>
-              <p 
-                className="text-white font-SourceSerifPro md:text-xl"
-              >
-                Manage your tasks in a 
-                <span 
-                  className="mx-2 font-Sunshiney text-xl font-normal tracking-widest md:text-2xl"
-                >
-                  funny way
-                </span>
-                 with our game..
-              </p>
-              <p 
-                className="text-white font-SourceSerifPro md:text-xl"
-              >
-                The rule is simple, just finish your task to kill the octopus
-              </p>
+              {
+                !userData?.token &&
+                  <>
+                    <p 
+                       className="text-white font-SourceSerifPro md:text-xl"
+                     >
+                       Manage your tasks in a 
+                       <span 
+                         className="mx-2 font-Sunshiney text-xl font-normal tracking-widest md:text-2xl"
+                       >
+                         funny way
+                       </span>
+                       with our game..
+                     </p>
+                     <p 
+                     className="text-white font-SourceSerifPro md:text-xl"
+                      >
+                        The rule is simple, just finish your task to kill the octopus
+                      </p>
+                  </>
+              }
+
+              {
+                userData?.token &&
+                  <>
+                    <p 
+                      className="text-white font-SourceSerifPro md:text-xl"
+                    >
+                      You Killed {userData?.user?.KilledOctopuses} Octopuses so far
+                    </p>
+                    <p 
+                      className="text-white font-SourceSerifPro md:text-xl"
+                    >
+                      Let's start to kill more octopuses by finishing your tasks
+                    </p>
+                  </>
+              }
+             
 
               <Link
                 to={userData?.token ? "/TODOctopus" : "/login"}
