@@ -2,21 +2,31 @@ import octopus from "../assets/octopus.svg";
 import hand from "../assets/hand.svg"
 import { Link } from "react-router-dom";
 import axiosInstance from "../config/axios.config";
+import { useEffect, useState } from "react";
 const HomePage = () => {
   const storageKey = "loggedInUser";
   const userDataString = localStorage.getItem(storageKey);
   const userData = userDataString ? JSON.parse(userDataString) : null;
+  const [killedOctopuses, setKilledOctopuses] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const getKilledOctopuses = async () => {
     try {
-      const res = await axiosInstance.get("/tasks/getKilledOctopuses");
+      setIsLoading(true);
+      const res = await axiosInstance.get(`/tasks/getKilledOctopuses/${userData?.user?._id}`);
       console.log(res);
     } catch (error) {
       console.log(error);
     }
-
+    finally {
+      setIsLoading(false);
+    }
   }
 
-  getKilledOctopuses();
+  useEffect(() => {
+    getKilledOctopuses();
+  }
+  , []);
+
   const beforeElementStyles: React.CSSProperties = {
     content: '""',
     position: 'absolute',
@@ -87,7 +97,11 @@ const HomePage = () => {
                     <p 
                       className="text-white font-SourceSerifPro md:text-xl"
                     >
-                      You Killed {userData?.user?.KilledOctopuses} Octopuses so far
+                      You Killed {
+                        isLoading ? (
+                          <span className="animate-pulse">...</span>
+                        ) : killedOctopuses
+                      } Octopuses so far
                     </p>
                     <p 
                       className="text-white font-SourceSerifPro md:text-xl"
