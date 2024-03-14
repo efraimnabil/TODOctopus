@@ -13,6 +13,7 @@ const HomePage = () => {
     try {
       setIsLoading(true);
       const res = await axiosInstance.get(`/tasks/getKilledOctopuses/${userData?.user?._id}`);
+      setKilledOctopuses(res?.data?.data?.KilledOctopuses);
       console.log(res);
     } catch (error) {
       console.log(error);
@@ -41,6 +42,7 @@ const HomePage = () => {
     WebkitMaskComposite: 'destination-out',
     maskComposite: 'exclude',
   };
+  
   return (
     <section 
       className="min-h-[calc(100vh-120px)]"
@@ -114,11 +116,10 @@ const HomePage = () => {
 
               <Link
                 to={userData?.token ? "/TODOctopus" : "/login"}
-                className="relative mt-5 text-white font-SourceSerifPro py-2 px-4 w-52 text-center md:w-60 md:text-xl"
+                className="relative mt-5 text-white font-SourceSerifPro py-2 px-4 w-60 text-center text-xl md:w-80 md:text-2xl"
               >
                 Let's start
-                <span 
-                  style={beforeElementStyles}></span>
+                <span style={beforeElementStyles}></span>
               </Link>
               </div>
 

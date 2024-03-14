@@ -201,9 +201,6 @@ const TodoList = () => {
     try {
       setIsRemoving(true);
       const { status } = await axiosInstance.delete(`/tasks/task/${editTodo.id}`, {
-        data: {
-          userId: userData?.id,
-        },
         headers: {
           Authorization: `Bearer ${userData?.token}`,
         },
@@ -212,10 +209,12 @@ const TodoList = () => {
         closeConfirmModal();
         toast.success("Todo removed successfully");
         if (data?.tasks?.length === 1) {
-          toast.success("You Killed an Octopus 🐙");
           if (page > 1) {
             setPage((prev) => prev - 1);
           }
+        }
+        if (data?.pagination?.total % 8 === 1) {
+          toast.success("You have killed an Octopus 🐙");
         }
         setQueryVersion((prev) => prev + 1);
       }

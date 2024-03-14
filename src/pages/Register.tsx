@@ -90,7 +90,7 @@ const RegisterPage = () => {
 
   const renderRegisterForm = RegisterForm.map(({name, placeholder, type, validation}, index) => {
     return (
-      <div key={index} className="mb-4">
+      <div key={index}>
         <label 
           className="text-md font-semibold text-white ml-1"
           htmlFor={name}
@@ -108,14 +108,14 @@ const RegisterPage = () => {
   });
 
   return (
-    <div className="max-w-sm mx-auto">
+    <div className="max-w-sm mx-auto font-SourceSerifPro">
       <h2 
         className="text-center mb-4 text-3xl font-semibold text-white"
       >
         Register to get access!
       </h2>
       <form 
-        className="z-10 rounded-[30px] relative py-12 px-8 bg-white-08 flex flex-col gap-8" 
+        className="z-10 rounded-[30px] relative py-12 px-8 bg-white-08 flex flex-col gap-5" 
         onSubmit={handleSubmit(onSubmit)}>
 
         {renderRegisterForm}
