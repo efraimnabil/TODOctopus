@@ -1,27 +1,33 @@
-# React + TypeScript + Vite
+# TODOctopus 🐙
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+TODOctopus is a fun and interactive todo list website where tasks are represented as octopus tentacles. Each task added corresponds to one of the octopus's eight arms. Upon adding the ninth task, a new octopus is spawned.
 
-Currently, two official plugins are available:
+Your mission is to complete your tasks in order to defeat these octopuses. As you complete tasks, tentacles are chopped off from the octopuses, and when the last tentacle is chopped, you've successfully defeated the octopus. 👏🏻
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## Expanding the ESLint configuration
+- User account creation.
+- Ability to generate todos with a title, description, and priority.
+- Option to update todos.
+- Ability to delete todos.
+- Fun UI design to enhance user enjoyment and motivation to complete tasks and "kill the octopus."
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## Technologies and Topics Used
 
-- Configure the top-level `parserOptions` property like this:
+- React JS
+- Typescript
+- Tailwind CSS
+- React Router
+- React Query
 
-```js
-   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-   },
-```
+## Usage
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+You can use the TODOctopus by visiting the 
+[TODOctopus Website](https://todoctopus.onrender.com).
+
+## Credits
+
+- Original idea by [Efraim Nabil](https://www.linkedin.com/in/efraimnabil/) and [Heba Ezz](https://www.linkedin.com/in/heba-ezz-361773250/)
+- Frontend development by [Efraim Nabil](https://www.linkedin.com/in/efraimnabil/)
+- UI/UX design by [Heba Ezz](https://www.linkedin.com/in/heba-ezz-361773250/)
+- Backend development by [Gerges Hani](https://www.linkedin.com/in/gergeshany/)
