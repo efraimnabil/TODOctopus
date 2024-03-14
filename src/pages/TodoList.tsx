@@ -64,6 +64,8 @@ const TodoList = () => {
     },
   });
 
+  console.log(data);
+
   // map to know wich hand to use
   const hands = [hand1, hand2, hand3, hand4, hand5, hand6, hand7, hand8];
   const hand = hands[data?.tasks?.length - 1] || hands[7];
@@ -248,7 +250,7 @@ const TodoList = () => {
             Finish your tasks, Kill Your Octopuses
           </h1>
           <h1 className="text-xl font-bold text-white font-SourceSerifPro">
-            You have {data?.pagination.pageCount} Octopuses, {data?.pagination.total} tasks
+            You have {data?.pagination?.pageCount} Octopuses, {data?.pagination?.total} tasks
           </h1>
         </div>
         <div className="flex gap-5 justify-end items-center">
@@ -285,8 +287,8 @@ const TodoList = () => {
         data?.tasks?.length ? (
           <Paginator
             page={page}
-            pageCount={data?.pagination.pageCount}
-            total={data?.pagination.total}
+            pageCount={data?.pagination?.pageCount}
+            total={data?.pagination?.total}
             isLoading={isLoading || isFetching}
             onClickPrev={onClickPrev}
             onClickNext={onClickNext}
