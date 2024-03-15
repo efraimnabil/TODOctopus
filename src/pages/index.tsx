@@ -25,8 +25,10 @@ const HomePage = () => {
   };
 
   useEffect(() => {
-    getKilledOctopuses();
-  }, []);
+    if (userData?.token) {
+      getKilledOctopuses();
+    }
+  }, [userData]);
 
   const beforeElementStyles: React.CSSProperties = {
     content: '""',
@@ -60,7 +62,7 @@ const HomePage = () => {
               <span className="mx-2">back {userData?.user?.username}</span>
             )}
             <span className="mx-2">to</span>
-            <span className="mx-2 text-pink-500 font-Sunshiney text-transparent bg-clip-text bg-gradient-to-br from-pink-trans to-orange-trans text-4xl font-normal tracking-widest">
+            <span className="mx-2 font-Sunshiney text-transparent bg-clip-text bg-gradient-to-br from-pink-trans to-orange-trans text-4xl font-normal tracking-widest">
               TODOctopus
             </span>
           </h1>
