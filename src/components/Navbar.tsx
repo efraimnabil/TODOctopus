@@ -87,7 +87,7 @@ const Navbar = () => {
                   to="/signup"
                   className="relative rounded-3xl w-24 text-center text-lg py-1 text-white md:text-md md:w-28"
                 >
-                  Register
+                  Signup
                   <span style={beforeElementStyles}></span>
                 </NavLink>
 
