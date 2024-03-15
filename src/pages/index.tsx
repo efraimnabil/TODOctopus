@@ -53,7 +53,7 @@ const HomePage = () => {
           alt="octopus"
           className="w-40 h-40 md:w-80 md:h-80"
         />
-        <div className="relative flex flex-col gap-2 md:gap-8 items-center justify-center text-center md:text-left">
+        <div className="flex flex-col gap-2 md:gap-8">
           <h1 className="text-3xl text-white font-SourceSerifPro md:text-4xl">
             Welcome
             {userData?.token && userData?.user?.username && (
