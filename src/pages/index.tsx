@@ -59,8 +59,8 @@ const HomePage = () => {
             {userData?.token && userData?.user?.username && (
               <span className="mx-2">back {userData?.user?.username}</span>
             )}
-            to
-            <span className="mx-2 text-pink-500 font-Sunshiney text-transparent bg-clip-text bg-gradient-to-br from-pink-trans to-orange-trans text-2xl font-normal tracking-widest">
+            <span className="mx-2">to</span>
+            <span className="mx-2 text-pink-500 font-Sunshiney text-transparent bg-clip-text bg-gradient-to-br from-pink-trans to-orange-trans text-4xl font-normal tracking-widest">
               TODOctopus
             </span>
           </h1>
