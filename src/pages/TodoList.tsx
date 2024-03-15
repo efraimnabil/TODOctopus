@@ -35,9 +35,8 @@ const TodoList = () => {
   const userData = userDataString ? JSON.parse(userDataString) : null;
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [isRemoving, setIsRemoving] = useState(false);
+  const [isRemoving, setIsRemoving] = useState<string>("")
   const [isAdding, setIsAdding] = useState(false);
-  const [isOpenConfirmModal, setIsOpenConfirmModal] = useState(false);
   const [isOpenAddModal, setIsOpenAddModal] = useState(false);
   const [queryVersion, setQueryVersion] = useState(1);
   const [page, setPage] = useState<number>(1);
@@ -94,16 +93,6 @@ const TodoList = () => {
     setEditTodo(todo);
     console.log(todo.id);
     setIsEditModalOpen(true);
-  };
-
-  const closeConfirmModal = () => {
-    setIsOpenConfirmModal(false);
-  };
-
-  const openConfirmModal = (todo: ITodo) => {
-    setEditTodo(todo);
-    console.log(todo);
-    setIsOpenConfirmModal(true);
   };
 
   const openAddModal = () => {
@@ -197,16 +186,15 @@ const TodoList = () => {
     }
   };
 
-  const onSubmitRemoveTodo = async () => {
+  const onSubmitRemoveTodo = async (id: string) => {
     try {
-      setIsRemoving(true);
-      const { status } = await axiosInstance.delete(`/tasks/task/${editTodo.id}`, {
+      setIsRemoving(id);
+      const { status } = await axiosInstance.delete(`/tasks/task/${id}`, {
         headers: {
           Authorization: `Bearer ${userData?.token}`,
         },
       });
       if (status === 204) {
-        closeConfirmModal();
         toast.success("Todo removed successfully");
         if (data?.tasks?.length === 1) {
           if (page > 1) {
@@ -222,7 +210,7 @@ const TodoList = () => {
       toast.error("Failed to remove todo, please try again");
     }
     finally {
-      setIsRemoving(false);
+      setIsRemoving("")
     }
   };
 
@@ -236,7 +224,8 @@ const TodoList = () => {
         title={attributes.title}
         description={attributes.description}
         onOpenEditModal={() => onOpenEditModal({ ...attributes, id: _id })}
-        openConfirmModal={() => openConfirmModal({ ...attributes, id: _id })}
+        onSubmitRemoveTodo={onSubmitRemoveTodo}
+        isRemoving={isRemoving}
       />
     )
   );
@@ -457,31 +446,6 @@ const TodoList = () => {
         </form>
       </Modal>
 
-      {/* DELETE TODO CONFIRM MODAL */}
-      <Modal
-        isOpen={isOpenConfirmModal}
-        closeModal={closeConfirmModal}
-        title="Are you sure you want to remove this Todo from your Store?"
-        description="Deleting this Todo will remove it permanently from your inventory. Any associated data, sales history, and other related information will also be deleted. Please make sure this is the intended action."
-      >
-        <div className="flex items-center space-x-3">
-          <Button 
-          className="bg-red-600 hover:bg-red-700 text-white rounded-xl w-28 text-center text-lg py-1 md:text-md md:w-32 font-SourceSerifPro"
-            onClick={onSubmitRemoveTodo}
-            isLoading={isRemoving}
-          >
-            Yes, remove
-          </Button>
-          <Button 
-            className="relative rounded-3xl w-24 text-center text-lg py-1 text-white md:text-md md:w-28 font-SourceSerifPro"
-            onClick={closeConfirmModal} 
-            type="button"
-          >
-            Cancel
-            <span style={GradientBorder}></span>
-          </Button>
-        </div>
-      </Modal>
     </div>
   );
 };
