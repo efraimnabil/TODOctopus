@@ -49,20 +49,20 @@ const HomePage = () => {
 
   return (
     <section className="min-h-[calc(100vh-120px)]">
-      <div className="flex flex-col items-center justify-between md:flex-row-reverse min-h-[calc(100%-10px)]">
+      <div className="flex flex-col items-center justify-between md:flex-row-reverse min-h-[calc(100%-10px)] gap-4">
         <img
           src={octopus}
           alt="octopus"
           className="w-40 h-40 md:w-80 md:h-80"
         />
         <div className="flex flex-col gap-2 md:gap-8">
-          <h1 className="text-3xl text-white font-SourceSerifPro md:text-4xl">
+          <h1 className="text-2xl text-white font-SourceSerifPro md:text-4xl">
             Welcome
             {userData?.token && userData?.user?.username && (
               <span className="mx-2">back {userData?.user?.username}</span>
             )}
-            <span className="mx-2">to</span>
-            <span className="mx-2 font-Sunshiney text-transparent bg-clip-text bg-gradient-to-br from-pink-trans to-orange-trans text-4xl font-normal tracking-widest">
+            <span className="mx-1 md:mx-2">to</span>
+            <span className="mx-1 md:mx-2 font-Sunshiney text-transparent bg-clip-text bg-gradient-to-br from-pink-trans to-orange-trans text-3xl md:text-4xl font-normal tracking-widest">
               TODOctopus
             </span>
           </h1>
