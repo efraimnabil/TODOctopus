@@ -30,4 +30,4 @@ You can use the TODOctopus by visiting the
 - Original idea by [Efraim Nabil](https://www.linkedin.com/in/efraimnabil/) and [Heba Ezz](https://www.linkedin.com/in/heba-ezz-361773250/)
 - Frontend development by [Efraim Nabil](https://www.linkedin.com/in/efraimnabil/)
 - UI/UX design by [Heba Ezz](https://www.linkedin.com/in/heba-ezz-361773250/)
-- Backend development by [Gerges Hani](https://www.linkedin.com/in/gergeshany/)
+- Backend development by [Gerges Hany](https://www.linkedin.com/in/gergeshany/)
