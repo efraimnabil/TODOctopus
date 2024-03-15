@@ -55,8 +55,8 @@ const HomePage = () => {
           alt="octopus"
           className="w-40 h-40 md:w-80 md:h-80"
         />
-        <div className="flex flex-col gap-2 md:gap-8">
-          <h1 className="text-2xl text-white font-SourceSerifPro md:text-4xl">
+        <div className="flex flex-col gap-2 md:gap-6">
+          <h1 className="text-2xl text-white font-SourceSerifPro md:text-5xl">
             Welcome
             {userData?.token && userData?.user?.username && (
               <span className="mx-2">back {userData?.user?.username}</span>
@@ -68,14 +68,14 @@ const HomePage = () => {
           </h1>
           {!userData?.token && (
             <>
-              <p className="text-white font-SourceSerifPro md:text-xl">
+              <p className="text-white font-SourceSerifPro md:text-2xl">
                 Manage your tasks in a
                 <span className="mx-2 font-Sunshiney text-xl font-normal tracking-widest md:text-2xl">
-                  funny way
+                  FUNNY WAY
                 </span>
                 with our game..
               </p>
-              <p className="text-white font-SourceSerifPro md:text-xl">
+              <p className="text-white font-SourceSerifPro md:text-2xl">
                 The rule is simple, just finish your task to kill the octopus
               </p>
             </>
