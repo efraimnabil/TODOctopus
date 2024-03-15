@@ -133,9 +133,9 @@ const LoginPage = () => {
               Login
             </Button>
             <p
-              className="text-white text-sm"
+              className="text-white"
             >
-              Don't have an account? <Link to="/register" className="text-pink-500">Register</Link>
+              Don't have an account? <Link to="/signup" className="text-pink-500 font-semibold">Signup</Link>
             </p>
         </div>
 
