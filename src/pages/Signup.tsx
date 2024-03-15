@@ -110,12 +110,12 @@ const RegisterPage = () => {
   return (
     <div className="max-w-sm mx-auto font-SourceSerifPro">
       <h2 
-        className="text-center mb-4 text-3xl font-semibold text-white"
+        className="text-center mb-8 text-3xl font-semibold text-white"
       >
-        Register to get access!
+        Signup
       </h2>
       <form 
-        className="z-10 rounded-[30px] relative py-12 px-8 bg-white-08 flex flex-col gap-5" 
+        className="z-10 rounded-[30px] relative py-12 px-8 bg-white-08 flex flex-col gap-4" 
         onSubmit={handleSubmit(onSubmit)}>
 
         {renderRegisterForm}

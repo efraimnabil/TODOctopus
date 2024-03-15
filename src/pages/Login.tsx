@@ -113,29 +113,31 @@ const LoginPage = () => {
   return (
     <div className="max-w-sm mx-auto font-SourceSerifPro">
       <h2 
-        className="text-center mb-4 text-3xl font-semibold text-white"
+        className="text-center mb-8 text-3xl font-semibold text-white"
       >
-        Login to get access!
+        Login
       </h2>
 
       <form 
-        className=" z-10 rounded-[30px] relative py-12 px-8 bg-white-08 flex flex-col gap-5" 
+        className="z-10 rounded-[30px] relative py-12 px-8 bg-white-08 flex flex-col gap-4" 
         onSubmit={handleSubmit(onSubmit)}
       >
         {renderLoginForm}
 
-        <p
-          className="text-white text-sm"
-        >
-          Don't have an account? <Link to="/register" className="text-pink-500">Register</Link>
-        </p>
 
-        <Button 
-          isLoading={isloading}
-          className="bg-gradient-to-tl from-pink-trans to-orange-trans text-white rounded-3xl text-center text-lg py-2"
-        >
-          Login
-        </Button>
+        <div className="flex flex-col gap-2">
+            <Button 
+              isLoading={isloading}
+              className="bg-gradient-to-tl from-pink-trans to-orange-trans text-white rounded-3xl text-center text-lg py-2"
+            >
+              Login
+            </Button>
+            <p
+              className="text-white text-sm"
+            >
+              Don't have an account? <Link to="/register" className="text-pink-500">Register</Link>
+            </p>
+        </div>
 
         <span className="-z-10" style={beforeElementStyles}></span>
       </form>
