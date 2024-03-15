@@ -28,7 +28,7 @@ const HomePage = () => {
     if (userData?.token) {
       getKilledOctopuses();
     }
-  }, [userData]);
+  }, [userData?.token]);
 
   const beforeElementStyles: React.CSSProperties = {
     content: '""',
