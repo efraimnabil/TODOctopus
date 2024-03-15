@@ -53,7 +53,7 @@ const HomePage = () => {
         <img
           src={octopus}
           alt="octopus"
-          className="w-40 h-40 md:w-80 md:h-80"
+          className="w-40 h-40 md:w-96 md:h-96"
         />
         <div className="flex flex-col gap-2 md:gap-6">
           <h1 className="text-2xl text-white font-SourceSerifPro md:text-5xl">
@@ -111,12 +111,12 @@ const HomePage = () => {
       <img
         src={hand}
         alt="hand"
-        className="absolute bottom-0 right-0 rotate-180 w-24 h-24"
+        className="absolute bottom-0 right-0 rotate-180 w-20 h-20 md:w-28 md:h-28"
       />
       <img
         src={hand}
         alt="hand"
-        className="absolute bottom-0 left-0 scale-x-[-1] rotate-180 flip w-24 h-24"
+        className="absolute bottom-0 left-0 scale-x-[-1] rotate-180 flip w-20 h-20 md:w-28 md:h-28"
       />
     </section>
   );

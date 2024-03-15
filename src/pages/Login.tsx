@@ -93,7 +93,7 @@ const LoginPage = () => {
     return (
       <div key={index}>
         <label 
-          className="text-md font-semibold text-white ml-1"
+          className="text-xl text-white ml-1"
           htmlFor={name}
         >
           {name.charAt(0).toUpperCase() + name.slice(1)}
@@ -113,7 +113,7 @@ const LoginPage = () => {
   return (
     <div className="max-w-sm mx-auto font-SourceSerifPro">
       <h2 
-        className="text-center mb-8 text-3xl font-semibold text-white"
+        className="text-center mb-8 text-3xl font-medium text-white"
       >
         Login
       </h2>
