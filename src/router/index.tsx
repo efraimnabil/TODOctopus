@@ -5,7 +5,7 @@ import RootLayout from "../pages/Layout";
 import ErrorHandler from "../components/errors/ErrorHandler";
 import HomePage from "../pages";
 import LoginPage from "../pages/Login";
-import RegisterPage from "../pages/Register";
+import RegisterPage from "../pages/Signup";
 import TodoList from "../pages/TodoList";
 
 const storageKey = "loggedInUser";
@@ -32,7 +32,7 @@ const router = createBrowserRouter(
           }
         />
         <Route
-          path="register"
+          path="signup"
           element={
             <ProtectedRoute isAllowed={!userData?.token} redirectPath="/login" data={userData}>
               <RegisterPage />

@@ -84,7 +84,7 @@ const Navbar = () => {
           ) : (
             <p className="flex items-center space-x-3">
                 <NavLink 
-                  to="/register"
+                  to="/signup"
                   className="relative rounded-3xl w-24 text-center text-lg py-1 text-white md:text-md md:w-28"
                 >
                   Register
