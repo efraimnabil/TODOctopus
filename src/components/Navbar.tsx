@@ -91,7 +91,7 @@ const Navbar = () => {
             <p className="flex items-center space-x-3">
                 <NavLink 
                   to="/signup"
-                  className="relative rounded-3xl w-24 text-center text-lg py-1 text-white md:text-md md:w-28"
+                  className="relative rounded-3xl w-28 text-center text-lg py-1 text-white md:text-xl md:w-32"
                 >
                   Signup
                   <span style={beforeElementStyles}></span>
@@ -99,7 +99,7 @@ const Navbar = () => {
 
                 <NavLink 
                   to="/login"
-                  className="bg-gradient-to-br from-pink-trans to-orange-trans text-white rounded-3xl w-24 text-center text-lg py-1 md:text-md md:w-28"
+                  className="bg-gradient-to-br from-pink-trans to-orange-trans text-white rounded-3xl w-28 text-center text-lg py-1 md:text-xl md:w-32"
                 >
                   Login
                 </NavLink>
