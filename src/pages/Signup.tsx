@@ -120,18 +120,20 @@ const RegisterPage = () => {
 
         {renderRegisterForm}
 
-        <p
-          className="text-white text-sm"
-        >
-          Already have an account? <Link to="/login" className="text-pink-500">Login</Link>
-        </p>
 
-        <Button 
-          isLoading={isloading}
-          className="bg-gradient-to-tl from-pink-trans to-orange-trans text-white rounded-3xl text-center text-lg py-2"
-        >
-          Register
-        </Button>
+        <div className="flex flex-col gap-2">
+          <Button 
+              isLoading={isloading}
+              className="bg-gradient-to-tl from-pink-trans to-orange-trans text-white rounded-3xl text-center text-lg py-2"
+            >
+            Register
+          </Button>
+          <p
+            className="text-white text-sm"
+          >
+            Already have an account? <Link to="/login" className="text-pink-500">Login</Link>
+          </p>
+        </div>
 
         <span className="-z-10" style={beforeElementStyles}></span>
       </form>

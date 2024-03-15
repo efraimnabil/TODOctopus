@@ -61,7 +61,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="mb-2 md:mb-10 px-3 py-5 flex justify-between items-center md:px-10 lg:px-20">
+    <nav className="mb-2 md:mb-10 px-3 py-5 flex justify-between items-center md:px-10 lg:px-20 font-SourceSerifPro">
           <NavLink 
             to="/" 
             className="font-Sunshiney text-transparent bg-clip-text bg-gradient-to-br from-pink-trans to-orange-trans text-xl font-normal tracking-widest md:text-2xl lg:text-3xl"
