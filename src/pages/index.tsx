@@ -53,10 +53,10 @@ const HomePage = () => {
         <img
           src={octopus}
           alt="octopus"
-          className="w-40 h-40 md:w-96 md:h-96"
+          className="w-48 h-48 md:w-52 md:h-52 lg:w-96 lg:h-96"
         />
         <div className="flex flex-col gap-2 md:gap-6">
-          <h1 className="text-2xl text-white font-SourceSerifPro md:text-5xl">
+          <h1 className="text-2xl text-white font-SourceSerifPro md:text-3xl lg:text-5xl">
             Welcome
             {userData?.token && userData?.user?.username && (
               <span className="mx-2">back {userData?.user?.username}</span>
@@ -68,14 +68,14 @@ const HomePage = () => {
           </h1>
           {!userData?.token && (
             <>
-              <p className="text-white font-SourceSerifPro md:text-2xl">
+              <p className="text-white font-SourceSerifPro md:text-xl lg:text-2xl">
                 Manage your tasks in a
-                <span className="mx-2 font-Sunshiney text-xl font-normal tracking-widest md:text-2xl">
+                <span className="mx-2 font-Sunshiney text-xl font-normal tracking-widest md:text-xl lg:text-2xl">
                   FUNNY WAY
                 </span>
                 with our game..
               </p>
-              <p className="text-white font-SourceSerifPro md:text-2xl">
+              <p className="text-white font-SourceSerifPro md:text-xl lg:text-2xl">
                 The rule is simple, just finish your task to kill the octopus
               </p>
             </>
@@ -83,7 +83,7 @@ const HomePage = () => {
 
           {userData?.token && (
             <>
-              <p className="text-white font-SourceSerifPro md:text-xl">
+              <p className="text-white font-SourceSerifPro md:text-xl lg:text-2xl">
                 You Killed{" "}
                 {isLoading ? (
                   <span className="animate-pulse">...</span>
@@ -92,7 +92,7 @@ const HomePage = () => {
                 )}{" "}
                 Octopuses so far
               </p>
-              <p className="text-white font-SourceSerifPro md:text-xl">
+              <p className="text-white font-SourceSerifPro md:text-xl lg:text-2xl">
                 Let's start to kill more octopuses by finishing your tasks
               </p>
             </>
@@ -100,7 +100,7 @@ const HomePage = () => {
 
           <Link
             to={userData?.token ? "/TODOctopus" : "/login"}
-            className="relative mt-5 text-white font-SourceSerifPro py-2 px-4 w-60 text-center text-xl md:w-80 md:text-2xl"
+            className="relative mt-2 lg:mt-5 text-white font-SourceSerifPro py-2 px-4 w-60 text-center text-xl md:w-80 md:text-2xl"
           >
             Let's start
             <span style={beforeElementStyles}></span>
