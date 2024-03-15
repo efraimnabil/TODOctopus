@@ -79,7 +79,7 @@ const Navbar = () => {
           userData ? (
             <div className="flex items-center space-x-2">
               <Button 
-                className="relative font-SourceSerifPro text-sm px-3 text-center text-white"
+                className="relative rounded-3xl w-28 text-center text-lg py-1 text-white md:text-xl md:w-32"
                 onClick={handleLogout}
                 isLoading={isloading}
               >
