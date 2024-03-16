@@ -46,7 +46,6 @@ const LoginPage = () => {
 
   // ** Handlers
   const onSubmit: SubmitHandler<IFormInput> = async (loginData) => {
-    console.log(loginData);
     setIsLoading(true);
 
     try {
@@ -69,7 +68,6 @@ const LoginPage = () => {
       }
 
     } catch (err) {
-      console.log(err);
       const errorObj = err as AxiosError<IErrorRes>;
       const message = errorObj.response?.data?.message || 'Something went wrong';
       toast.error(message, {

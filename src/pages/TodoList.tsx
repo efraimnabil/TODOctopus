@@ -60,8 +60,6 @@ const TodoList = () => {
     },
   });
 
-  console.log(data);
-
   // map to know wich hand to use
   const hands = [hand1, hand2, hand3, hand4, hand5, hand6, hand7, hand8];
   const hand = hands[data?.tasks?.length - 1] || hands[7];
@@ -88,7 +86,6 @@ const TodoList = () => {
 
   const onOpenEditModal = (todo: ITodo) => {
     setEditTodo(todo);
-    console.log(todo.id);
     setIsEditModalOpen(true);
   };
 
