@@ -7,7 +7,7 @@ const HomePage = () => {
   const storageKey = "loggedInUser";
   const userDataString = localStorage.getItem(storageKey);
   const userData = userDataString ? JSON.parse(userDataString) : null;
-  const [killedOctopuses, setKilledOctopuses] = useState(0);
+  const [killedOctopuses, setKilledOctopuses] = useState<string | number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const getKilledOctopuses = async () => {
     try {
@@ -16,9 +16,8 @@ const HomePage = () => {
         `/tasks/getKilledOctopuses/${userData?.user?._id}`
       );
       setKilledOctopuses(res?.data?.data?.KilledOctopuses);
-      console.log(res);
     } catch (error) {
-      console.log(error);
+      setKilledOctopuses("?");
     } finally {
       setIsLoading(false);
     }
