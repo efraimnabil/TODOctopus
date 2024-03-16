@@ -96,10 +96,11 @@ const HomePage = () => {
 
           <Link
             to={userData?.token ? "/TODOctopus" : "/login"}
-            className="relative mt-2 lg:mt-5 text-white font-SourceSerifPro py-2 px-4 w-60 text-center text-xl md:w-80 md:text-2xl"
+            className="relative mt-2 lg:mt-5 text-white font-SourceSerifPro py-2 px-4 w-60 text-center text-xl md:w-80 md:text-2xl transition-all duration-200 before:absolute before:bottom-0 before:left-0 before:right-0 before:top-0 before:m-auto before:h-0 before:w-0 before:rounded-sm before:bg-gradient-to-br before:from-pink-trans before:to-orange-trans
+             before:duration-300 before:ease-out hover:text-white hover:shadow-indigo-600 hover:before:h-full hover:before:w-full hover:before:rounded-[50px] hover:before:opacity-80 transform active:scale-95"
           >
-            Let's start
             <span style={beforeElementStyles}></span>
+            <span className="relative z-10">Let's start</span>
           </Link>
         </div>
       </div>
