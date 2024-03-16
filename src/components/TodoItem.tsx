@@ -1,5 +1,7 @@
+import { useState } from "react";
 import Button from "./ui/Button";
 import Pen from "./ui/Pen";
+import Modal from "./ui/Modal";
 interface IProps {
   _id: string;
   title: string;
@@ -61,19 +63,41 @@ const TodoItem = ({
     "xl:top-1 xl:right-10",
   ];
 
+  const [isTodoOpen, setIsTodoOpen] = useState(false);
+
+  const handleTodoOpen = () => {
+    setIsTodoOpen(true);
+  }
+
+  const handleTodoClose = () => {
+    setIsTodoOpen(false);
+  }
+
+
+
   return (
     <div
       key={_id}
       className={`flex w-full items-center justify-between bg-gradient-to-br from-transparent via-transparent to-todo-bg backdrop-blur-md duration-300 px-3 py-2 md:py-1 shadow-custom-orange rounded-2xl md:absolute md:w-52 lg:w-60 xl:w-80 ${todosPostionsMd[idx]} ${todosPostionsLg[idx]} ${todosPostionsXl[idx]}`}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          handleTodoOpen();
+        }
+      }}
     >
 
-      <p className="w-full font-semibold text-white font-SourceSerifPro">
+      <p 
+        className="w-full font-semibold text-white font-SourceSerifPro"
+        onClick={handleTodoOpen}
+      >
         {title}
       </p>
       <div className="flex items-center justify-end w-full space-x-5">
         {/* delete */}
         <Button
-          onClick={() => onSubmitRemoveTodo(_id)}
+          onClick={(event) => {
+            event.stopPropagation();
+            onSubmitRemoveTodo(_id)}}
         >
           {
             isRemoving === _id ? (
@@ -91,18 +115,68 @@ const TodoItem = ({
         </Button>
 
         <Button
-          onClick={() =>
+          onClick={(event) =>{
+            event.stopPropagation();
               onOpenEditModal({
                 id: _id,
                 title: title,
                 description: description,
                 priority: Priority,
-              })
+              })}
           }
         >
           <Pen />
         </Button>
       </div>
+
+      <Modal isOpen={isTodoOpen} closeModal={handleTodoClose} title="Todo Details">
+        <div className="space-y-3">
+          <h1 className="text-2xl font-bold text-white font-SourceSerifPro">
+            {title}
+          </h1>
+          <p className="text-lg font-semibold text-white font-SourceSerifPro">
+            Priority: {Priority === "3" ? "High" : Priority === "2" ? "Medium" : Priority === "1" ? "Low" : ""}
+          </p>
+          <p className="text-lg font-semibold text-white font-SourceSerifPro">
+            {description}
+          </p>
+          <Button 
+              className="absolute top-0 right-5 text-white text-2xl font-bold px-2 font-mono"
+              onClick={handleTodoClose}
+            >
+              X
+            </Button>
+          <div className="flex items-center justify-center space-x-3">
+            <Button
+              className="rounded-xl bg-green-500 hover:bg-green-600 px-2 w-full"
+              onClick={
+                () => {
+                  onOpenEditModal({
+                    id: _id,
+                    title: title,
+                    description: description,
+                    priority: Priority,
+                  });
+                  handleTodoClose();
+                }
+              }
+            >
+              Update
+            </Button>
+
+            <Button
+              className="rounded-xl bg-red-500 hover:bg-red-600 px-2 w-full"
+              onClick={() => {
+                onSubmitRemoveTodo(_id);
+                handleTodoClose();
+              }}
+            >
+              Delete
+            </Button>
+
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
