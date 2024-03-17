@@ -7,6 +7,7 @@ import HomePage from "../pages";
 import LoginPage from "../pages/Login";
 import RegisterPage from "../pages/Signup";
 import TodoList from "../pages/TodoList";
+import AboutUs from "../pages/AboutUs";
 
 const storageKey = "loggedInUser";
 const userDataString = localStorage.getItem(storageKey);
@@ -45,6 +46,12 @@ const router = createBrowserRouter(
             <ProtectedRoute isAllowed={userData?.token} redirectPath="/login" data={userData}>
               <TodoList />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="aboutus"
+          element={
+              <AboutUs />
           }
         />
       </Route>
