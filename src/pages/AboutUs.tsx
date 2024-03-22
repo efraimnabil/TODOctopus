@@ -95,8 +95,9 @@ const AboutUs = ({}: IProps) => {
                 iconsLinks={[{icon: linkedin, link: "https://www.linkedin.com/in/heba-ezz-361773250/"}, {icon: behance, link: "https://www.behance.net/hebaaezz"}]}
             />
             <Box
-                title="GitHub Repository" 
-                iconsLinks={[{icon: github, link: "https://github.com/efraimnabil/TODOctopus"}]}
+                title="GitHub Repositories" 
+                links={[{title: "frontend", link: "https://github.com/efraimnabil/TODOctopus"}
+                , {title: "backend", link: "https://github.com/GergesHany/TODOctopus"}]}
             />
         </div>
 
