@@ -125,6 +125,13 @@ Each phase ends with something you can open and try. Phase 1 comes early on purp
 - Sound (slash, squish, ink, death; mute toggle), haptics on mobile, swipe across a tentacle to cut it.
 - Sort/filter in the list (priority, newest); About page ported from v1.
 - **Done when:** a new visitor understands the game in under 10 seconds without reading anything.
+- *Built:*
+  - **Landing (`/`):** a live 3D octopus with five sample tasks you can slash right on the page (a toy copy, nothing is saved; when it dies a new one swims in), a three-step "How it works", and a link straight to `/play`.
+  - **Onboarding:** a hint card in the task panel ("Add your first task…", then "Click or swipe the tentacle…"). It is derived from the game state, so it disappears after the first slash, and it can be dismissed.
+  - **Trophy room (`/trophies`):** defeated octopuses with date and the tasks they held, plus the kill counter and streak. The "defeated" count in the game header links to it.
+  - **Sound and haptics:** synthesised with Web Audio, so there are no audio files. They play from game events (`onEvents` in the store). One mute toggle covers both and is remembered.
+  - **Swipe to cut:** press on an arm and drag away to slash it where you pressed (the camera doesn't orbit meanwhile). Click still works.
+  - **List:** filter by priority, sort by priority / newest / oldest. **About (`/about`):** ported from v1.
 
 ### Phase 5 — Polish + launch
 - Performance pass on low-end devices, loading states, error boundaries.

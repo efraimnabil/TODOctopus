@@ -13,6 +13,24 @@ function setup() {
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
 describe("game store", () => {
+  it("tells onEvents what happened, including refused-nothing for bad input", async () => {
+    const seen: string[] = [];
+    let n = 0;
+    const store = createGameStore(new MemoryRepository(), {
+      now: () => 1_000 + n,
+      random: () => 0.5,
+      id: () => `id${++n}`,
+      onEvents: (events) => seen.push(...events.map((e) => e.type)),
+    });
+    await store.getState().load();
+    store.getState().addTask({ title: " ", priority: 1 });
+    expect(seen).toEqual([]);
+    store.getState().addTask({ title: "a", priority: 1 });
+    expect(seen).toEqual(["spawned", "grew"]);
+    store.getState().completeTask(store.getState().game.tasks[0].id);
+    expect(seen).toEqual(["spawned", "grew", "cut", "defeated"]);
+  });
+
   it("adding the first task spawns an octopus and puts it on stage", async () => {
     const { get, repo } = setup();
     await get().load();

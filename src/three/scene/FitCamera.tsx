@@ -17,8 +17,14 @@ type Controls = { target: THREE.Vector3; update: () => void };
 export function FitCamera({
   distanceScale = 1,
   lineup = false,
+  centered = false,
+  portraitScale = 1,
 }: {
   distanceScale?: number;
+  /** Keep the octopus in the middle of the screen (no room made for a task sheet) */
+  centered?: boolean;
+  /** Extra camera distance on tall, narrow screens */
+  portraitScale?: number;
   /** Wide shot that fits the four-octopus comparison row */
   lineup?: boolean;
 }) {
@@ -32,8 +38,8 @@ export function FitCamera({
     const base = lineup
       ? aspect >= 1.4 ? 38 : aspect >= 1 ? 52 : 80
       : aspect >= 1.4 ? 8.2 : aspect >= 1 ? 9.4 : aspect >= 0.7 ? 11 : 12.5;
-    const distance = base * distanceScale;
-    const drop = aspect < 0.9 ? (lineup ? 4 : 1.5) * distanceScale : 0;
+    const distance = base * distanceScale * (aspect < 0.9 ? portraitScale : 1);
+    const drop = aspect < 0.9 && !centered ? (lineup ? 4 : 1.5) * distanceScale : 0;
     const target = new THREE.Vector3(0, OCTOPUS_CENTER_Y - drop, 0);
     camera.position.copy(target).addScaledVector(DIRECTION, distance);
     camera.lookAt(target);
@@ -41,7 +47,7 @@ export function FitCamera({
       controls.target.copy(target);
       controls.update();
     }
-  }, [camera, controls, width, height, distanceScale, lineup]);
+  }, [camera, controls, width, height, distanceScale, lineup, centered, portraitScale]);
 
   return null;
 }

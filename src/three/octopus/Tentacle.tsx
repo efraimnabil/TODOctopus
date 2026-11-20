@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useFrame, type ThreeEvent } from "@react-three/fiber";
+import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 import type { Tentacle as TentacleModel } from "@/game/scene";
 import type { LabelStore } from "../labels";
@@ -71,6 +71,9 @@ export function Tentacle({
   const arm = species.arm;
 
   const [hovered, setHovered] = useState(false);
+  const controls = useThree((st) => st.controls) as unknown as { enabled: boolean } | null;
+  /** A press that began on this arm: dragging far enough slashes it */
+  const swipe = useRef<(() => void) | null>(null);
   /** Seconds the pointer has been clearly away from this hovered arm */
   const awayFor = useRef(0);
   const material = useMemo(
@@ -299,6 +302,34 @@ export function Tentacle({
     hover.owner = model.id;
     setHovered(true);
   };
+  // Pressing on an arm and dragging away slashes it where it was pressed
+  // (the camera doesn't orbit meanwhile). A press that barely moves is a
+  // click instead. Tracked on window so a quick flick can't lose the arm.
+  const handleDown = (e: ThreeEvent<PointerEvent>) => {
+    if (!canCut) return;
+    swipe.current?.();
+    const start = { x: e.clientX, y: e.clientY };
+    const ring = Math.round(tube.nearestRing(e.point.x, e.point.y, e.point.z) / SUBDIVISIONS);
+    if (controls) controls.enabled = false;
+    const stop = () => {
+      swipe.current = null;
+      if (controls) controls.enabled = true;
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", stop);
+      window.removeEventListener("pointercancel", stop);
+    };
+    const move = (ev: PointerEvent) => {
+      if (Math.hypot(ev.clientX - start.x, ev.clientY - start.y) < SWIPE_PX) return;
+      stop();
+      onCut(model.id, ring);
+    };
+    swipe.current = stop;
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", stop);
+    window.addEventListener("pointercancel", stop);
+  };
+  useEffect(() => () => swipe.current?.(), []);
+
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
     if (!canCut || e.delta > 6) return;
     e.stopPropagation();
@@ -313,6 +344,7 @@ export function Tentacle({
         material={material}
         frustumCulled={false}
         onPointerOver={interactive ? handleOver : undefined}
+        onPointerDown={interactive ? handleDown : undefined}
         onClick={interactive ? handleClick : undefined}
       />
       <instancedMesh
@@ -327,6 +359,8 @@ export function Tentacle({
   );
 }
 
+/** Drag this far (px) from where a press began on an arm to slash it */
+const SWIPE_PX = 28;
 /** Keep the hover while the pointer is within this many pixels of the arm */
 const HOVER_KEEP_PX = 70;
 /** …and drop it after the pointer has been further away for this long */

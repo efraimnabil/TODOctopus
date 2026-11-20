@@ -12,6 +12,7 @@ import {
   saveSpeciesChoice,
   type SpeciesId,
 } from "@/three/octopus/species";
+import { SoundToggle } from "../SoundToggle";
 import { GameProvider, useGame } from "./GameProvider";
 import { AccountMenu } from "./AccountMenu";
 import { TaskPanel } from "./TaskPanel";
@@ -66,6 +67,7 @@ function GameScreen() {
                     ))}
                   </select>
                 </label>
+                <SoundToggle />
                 <button
                   onClick={() => setShowLabels((v) => !v)}
                   className="rounded-full px-2 py-0.5 text-foam/60 hover:bg-white/10"
@@ -84,7 +86,7 @@ function GameScreen() {
           <DefeatCard />
           <Toast />
           <p className="pointer-events-none absolute bottom-5 left-1/2 hidden -translate-x-1/2 text-sm text-foam/50 lg:block">
-            Click a tentacle to slash it · drag to look around · ← → switch octopus
+            Click or swipe a tentacle to slash it · drag to look around · ← → switch octopus
           </p>
         </>
       )}
@@ -105,7 +107,10 @@ function Header() {
         TODOctopus
       </Link>
       <p className="text-xs tracking-[0.2em] text-foam/55 uppercase">
-        {stats.killed} defeated · {stats.finished} slashed
+        <Link href="/trophies" className="pointer-events-auto hover:text-foam" title="Trophy room">
+          {stats.killed} defeated
+        </Link>
+        {` · ${stats.finished} slashed`}
         {stats.streak > 0 && ` · ${stats.streak}-day streak`}
       </p>
     </header>

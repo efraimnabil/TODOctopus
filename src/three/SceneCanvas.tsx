@@ -50,6 +50,10 @@ interface Props {
   distanceScale?: number;
   /** Wide shot for the comparison lineup */
   lineup?: boolean;
+  /** Drag-to-orbit camera. Off where the page itself needs to scroll. */
+  orbit?: boolean;
+  /** Landing-page framing: octopus centred, pulled back on phones */
+  hero?: boolean;
   children: ReactNode;
 }
 
@@ -62,6 +66,8 @@ export function SceneCanvas({
   species,
   distanceScale = 1,
   lineup = false,
+  orbit = true,
+  hero = false,
   children,
 }: Props) {
   const { fx, labels, hover } = kit;
@@ -96,16 +102,23 @@ export function SceneCanvas({
           {children}
           <FxLayer fx={fx} palette={palette} species={species} />
         </ShakeGroup>
-        <OrbitControls
-          makeDefault
-          enablePan={false}
-          enableDamping
-          minDistance={3.5}
-          maxDistance={lineup ? 90 : 18}
-          minPolarAngle={0.5}
-          maxPolarAngle={1.5}
+        {orbit && (
+          <OrbitControls
+            makeDefault
+            enablePan={false}
+            enableDamping
+            minDistance={3.5}
+            maxDistance={lineup ? 90 : 18}
+            minPolarAngle={0.5}
+            maxPolarAngle={1.5}
+          />
+        )}
+        <FitCamera
+          distanceScale={distanceScale}
+          lineup={lineup}
+          centered={hero}
+          portraitScale={hero ? 1.1 : 1}
         />
-        <FitCamera distanceScale={distanceScale} lineup={lineup} />
         <LabelProjector store={labels} />
         {quality === "high" && <Effects />}
       </Suspense>
