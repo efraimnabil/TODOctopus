@@ -42,6 +42,16 @@ describe("game store", () => {
     expect(repo.commands.map((c) => c.type)).toEqual(["addTask"]);
   });
 
+  it("announces what happened for screen readers", async () => {
+    const { get } = setup();
+    await get().load();
+    get().addTask({ title: "Pay rent", priority: 2 });
+    expect(get().announcement).toContain("Added “Pay rent”");
+    get().completeTask(get().game.tasks[0].id);
+    expect(get().announcement).toContain("Slashed “Pay rent”");
+    expect(get().announcement).toContain("is defeated");
+  });
+
   it("reports invalid input without changing anything", async () => {
     const { get, repo } = setup();
     await get().load();

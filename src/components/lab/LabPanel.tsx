@@ -201,7 +201,7 @@ export function LabPanel({
                 }`}
               >
                 <span className={`size-2 shrink-0 rounded-full ${dot}`} />
-                <span className={`min-w-0 flex-1 truncate ${done ? "text-foam/40 line-through" : ""}`}>
+                <span className={`min-w-0 flex-1 truncate ${done ? "text-foam/60 line-through" : ""}`}>
                   {t.title}
                 </span>
                 {t.status === "alive" && alive && (

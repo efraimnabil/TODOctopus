@@ -42,6 +42,8 @@ export interface GameStoreState {
   /** Death animation done: show the "defeated" card for this octopus */
   defeatedCard: string | null;
   error: string | null;
+  /** What just happened, in words, for screen readers (an aria-live region) */
+  announcement: string;
   /** Who owns this game; null until the first change creates a guest */
   account: Account | null;
   /** Changes not yet confirmed as saved */
@@ -85,6 +87,7 @@ export function createGameStore(repo: GameRepository, deps: GameDeps = browserDe
         error: null,
         pending: s.pending + 1,
         ...react(s, result.events),
+        announcement: describe(result.events) ?? s.announcement,
       }));
       deps.onEvents?.(result.events);
       repo.commit(command, result.state).then(
@@ -132,6 +135,7 @@ export function createGameStore(repo: GameRepository, deps: GameDeps = browserDe
       dying: [],
       defeatedCard: null,
       error: null,
+      announcement: "",
       account: null,
       pending: 0,
 
@@ -249,6 +253,19 @@ export function createGameStore(repo: GameRepository, deps: GameDeps = browserDe
       },
     };
   });
+}
+
+/** A sentence for screen readers about what a command just did. */
+export function describe(events: GameEvent[]): string | null {
+  const parts: string[] = [];
+  for (const e of events) {
+    if (e.type === "spawned") parts.push(`A new octopus, ${e.octopus.name}, appeared.`);
+    else if (e.type === "grew") parts.push(`Added “${e.task.title}”.`);
+    else if (e.type === "cut") parts.push(`Slashed “${e.task.title}”.`);
+    else if (e.type === "removed") parts.push(`Deleted “${e.task.title}”.`);
+    else if (e.type === "defeated") parts.push(`${e.octopus.name} is defeated.`);
+  }
+  return parts.length ? parts.join(" ") : null;
 }
 
 function saveErrorMessage(err: unknown): string {

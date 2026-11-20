@@ -8,6 +8,8 @@ import { OctopusRig } from "./octopus/OctopusRig";
 import { DEFAULT_TUNING, type Tuning } from "./octopus/shared";
 import { DEFAULT_SPECIES, SPECIES } from "./octopus/species";
 import { TentacleLabels } from "./labels";
+import { detectQuality } from "./quality";
+import { SceneBoundary } from "./SceneBoundary";
 import { SceneCanvas, useSceneKit, type Quality } from "./SceneCanvas";
 
 const SAMPLE_TASKS = [
@@ -24,15 +26,13 @@ function freshOctopus(round: number): Octopus {
     name: "Hero",
     seed: 40 + round * 17,
     status: "alive",
-    tentacles: SAMPLE_TASKS.map(
-      (title, i): Tentacle => ({
-        id: `hero-${round}-${i}`,
-        slot: i,
-        title,
-        priority: ((i % 3) + 1) as 1 | 2 | 3,
-        status: "alive",
-      }),
-    ),
+    tentacles: SAMPLE_TASKS.map((title, i): Tentacle => ({
+      id: `hero-${round}-${i}`,
+      slot: i,
+      title,
+      priority: ((i % 3) + 1) as 1 | 2 | 3,
+      status: "alive",
+    })),
   };
 }
 
@@ -43,7 +43,7 @@ function freshOctopus(round: number): Octopus {
 export default function HeroScene() {
   const kit = useSceneKit();
   const species = SPECIES[DEFAULT_SPECIES];
-  const [quality, setQuality] = useState<Quality>("high");
+  const [quality, setQuality] = useState<Quality>(detectQuality);
   const [round, setRound] = useState(0);
   const [slashed, setSlashed] = useState<ReadonlyMap<string, number>>(new Map());
   const [dying, setDying] = useState(false);
@@ -62,23 +62,20 @@ export default function HeroScene() {
   );
   const palette = useMemo(() => createPalette(model.seed, species), [model.seed, species]);
 
-  const cut = useCallback(
-    (id: string, cutIndex: number) => {
-      play("slash");
-      play("squish");
-      play("ink");
-      buzz(40);
-      setSlashed((prev) => {
-        const next = new Map(prev).set(id, cutIndex);
-        if (next.size === SAMPLE_TASKS.length) {
-          play("death");
-          setDying(true);
-        }
-        return next;
-      });
-    },
-    [],
-  );
+  const cut = useCallback((id: string, cutIndex: number) => {
+    play("slash");
+    play("squish");
+    play("ink");
+    buzz(40);
+    setSlashed((prev) => {
+      const next = new Map(prev).set(id, cutIndex);
+      if (next.size === SAMPLE_TASKS.length) {
+        play("death");
+        setDying(true);
+      }
+      return next;
+    });
+  }, []);
 
   // A beaten octopus is replaced a moment later.
   const dead = useCallback(() => {
@@ -96,29 +93,31 @@ export default function HeroScene() {
 
   return (
     <>
-      <SceneCanvas
-        kit={kit}
-        quality={quality}
-        onSlow={() => setQuality("low")}
-        palette={palette}
-        species={species}
-        distanceScale={species.view * 1.05}
-        orbit={false}
-        hero
-      >
-        <OctopusRig
-          key={model.id}
-          model={model}
+      <SceneBoundary>
+        <SceneCanvas
+          kit={kit}
+          quality={quality}
+          onSlow={() => setQuality("low")}
+          palette={palette}
           species={species}
-          fx={kit.fx}
-          tuning={tuning}
-          labels={kit.labels}
-          hover={kit.hover}
-          onCut={cut}
-          onRetracted={noop}
-          onDead={dead}
-        />
-      </SceneCanvas>
+          distanceScale={species.view * 1.05}
+          orbit={false}
+          hero
+        >
+          <OctopusRig
+            key={model.id}
+            model={model}
+            species={species}
+            fx={kit.fx}
+            tuning={tuning}
+            labels={kit.labels}
+            hover={kit.hover}
+            onCut={cut}
+            onRetracted={noop}
+            onDead={dead}
+          />
+        </SceneCanvas>
+      </SceneBoundary>
       {model.status === "alive" && (
         <TentacleLabels
           store={kit.labels}

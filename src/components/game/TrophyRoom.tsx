@@ -28,7 +28,7 @@ function Room() {
   const list = useMemo(() => trophies(game), [game]);
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-10 md:py-16">
+    <main id="main" className="mx-auto max-w-3xl px-5 py-10 md:py-16">
       <div className="flex items-center justify-between">
         <Link href="/" className="font-display text-2xl tracking-widest text-brand-gradient">
           TODOctopus

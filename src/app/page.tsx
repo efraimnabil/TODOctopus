@@ -4,7 +4,7 @@ import { SoundToggle } from "@/components/SoundToggle";
 
 export default function Home() {
   return (
-    <main>
+    <main id="main">
       <section className="relative h-dvh min-h-[34rem] w-full overflow-hidden bg-abyss">
         <HeroLoader />
 

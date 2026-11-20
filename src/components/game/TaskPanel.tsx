@@ -156,7 +156,7 @@ export function TaskPanel({ footer }: { footer: ReactNode }) {
             </summary>
             <ul className="mt-1.5 space-y-1">
               {done.map((t) => (
-                <li key={t.id} className="truncate px-3 py-1 text-foam/40 line-through">
+                <li key={t.id} className="truncate px-3 py-1 text-foam/60 line-through">
                   {t.title}
                 </li>
               ))}

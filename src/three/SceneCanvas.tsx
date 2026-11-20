@@ -13,7 +13,8 @@ import { FitCamera } from "./scene/FitCamera";
 import { Underwater } from "./scene/Underwater";
 import { LabelProjector, LabelStore } from "./labels";
 
-export type Quality = "high" | "low";
+import type { Quality } from "./quality";
+export type { Quality };
 
 /** The shared helpers one scene needs: effects bus, DOM labels, arm hover. */
 export interface SceneKit {
@@ -54,6 +55,8 @@ interface Props {
   orbit?: boolean;
   /** Landing-page framing: octopus centred, pulled back on phones */
   hero?: boolean;
+  /** Text alternative for the picture (the task list is the real interface) */
+  label?: string;
   children: ReactNode;
 }
 
@@ -68,60 +71,63 @@ export function SceneCanvas({
   lineup = false,
   orbit = true,
   hero = false,
+  label = "An octopus swimming underwater. Use the task list to play.",
   children,
 }: Props) {
   const { fx, labels, hover } = kit;
   const pointerDown = useRef({ x: 0, y: 0 });
 
   return (
-    <Canvas
-      // Fixed for the whole session: changing dpr at runtime can race a
-      // resize and leave the renderer and canvas at different sizes.
-      dpr={[1, 2]}
-      camera={{ position: [0, 2.8, 8.2], fov: 38 }}
-      // Opaque canvas: nothing in the scene should ever show the page through.
-      gl={{ antialias: quality === "high", alpha: false }}
-      onPointerDown={(e) => {
-        pointerDown.current = { x: e.clientX, y: e.clientY };
-      }}
-      // A hovered arm lifts a little and may slide off the cursor: a click
-      // that misses every mesh still slashes the arm that's hovered.
-      onPointerMissed={(e) => {
-        const moved = Math.hypot(
-          e.clientX - pointerDown.current.x,
-          e.clientY - pointerDown.current.y,
-        );
-        if (moved < 6) hover.cut?.();
-      }}
-    >
-      <Suspense fallback={null}>
-        <PerformanceMonitor onDecline={onSlow} />
-        <FxDriver fx={fx} />
-        <ShakeGroup fx={fx}>
-          <Underwater quality={quality} fogDensity={lineup ? 0.011 : 0.055} />
-          {children}
-          <FxLayer fx={fx} palette={palette} species={species} />
-        </ShakeGroup>
-        {orbit && (
-          <OrbitControls
-            makeDefault
-            enablePan={false}
-            enableDamping
-            minDistance={3.5}
-            maxDistance={lineup ? 90 : 18}
-            minPolarAngle={0.5}
-            maxPolarAngle={1.5}
+    <div className="h-full w-full" role="img" aria-label={label}>
+      <Canvas
+        // Fixed for the whole session: changing dpr at runtime can race a
+        // resize and leave the renderer and canvas at different sizes.
+        dpr={[1, 2]}
+        camera={{ position: [0, 2.8, 8.2], fov: 38 }}
+        // Opaque canvas: nothing in the scene should ever show the page through.
+        gl={{ antialias: quality === "high", alpha: false }}
+        onPointerDown={(e) => {
+          pointerDown.current = { x: e.clientX, y: e.clientY };
+        }}
+        // A hovered arm lifts a little and may slide off the cursor: a click
+        // that misses every mesh still slashes the arm that's hovered.
+        onPointerMissed={(e) => {
+          const moved = Math.hypot(
+            e.clientX - pointerDown.current.x,
+            e.clientY - pointerDown.current.y,
+          );
+          if (moved < 6) hover.cut?.();
+        }}
+      >
+        <Suspense fallback={null}>
+          <PerformanceMonitor onDecline={onSlow} />
+          <FxDriver fx={fx} />
+          <ShakeGroup fx={fx}>
+            <Underwater quality={quality} fogDensity={lineup ? 0.011 : 0.055} />
+            {children}
+            <FxLayer fx={fx} palette={palette} species={species} />
+          </ShakeGroup>
+          {orbit && (
+            <OrbitControls
+              makeDefault
+              enablePan={false}
+              enableDamping
+              minDistance={3.5}
+              maxDistance={lineup ? 90 : 18}
+              minPolarAngle={0.5}
+              maxPolarAngle={1.5}
+            />
+          )}
+          <FitCamera
+            distanceScale={distanceScale}
+            lineup={lineup}
+            centered={hero}
+            portraitScale={hero ? 1.1 : 1}
           />
-        )}
-        <FitCamera
-          distanceScale={distanceScale}
-          lineup={lineup}
-          centered={hero}
-          portraitScale={hero ? 1.1 : 1}
-        />
-        <LabelProjector store={labels} />
-        {quality === "high" && <Effects />}
-      </Suspense>
-    </Canvas>
+          <LabelProjector store={labels} />
+          {quality === "high" && <Effects />}
+        </Suspense>
+      </Canvas>
+    </div>
   );
 }
