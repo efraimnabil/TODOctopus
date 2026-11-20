@@ -261,7 +261,7 @@ export function Tentacle({
     if (steps === 4) s.acc = 0;
 
     tube.update(chain.pos, count, s.side, shapeFns.radiusOfRing, shapeFns.colorOfRing);
-    if (suckers.current) writeSuckers(suckers.current, tube, 3, tube.rings - 3, suckerLayout);
+    if (suckers.current && !species.noSuckers) writeSuckers(suckers.current, tube, 3, tube.rings - 3, suckerLayout);
 
     if (hovered) {
       if (!canCut || hover.owner !== model.id) {
@@ -280,8 +280,8 @@ export function Tentacle({
     material.emissive.copy(PINK_GLOW).lerp(ANGRY_GLOW, s.angry);
     const throb = s.angry * (0.65 + 0.3 * Math.sin(s.time * 7));
     material.emissiveIntensity = Math.max(s.hover * 0.55, s.select * pulse, throb);
-    material.opacity = octo.opacity;
-    material.transparent = octo.opacity < 0.999;
+    material.opacity = octo.opacity * (species.opacity ?? 1);
+    material.transparent = material.opacity < 0.999;
 
     if (labels && canCut && tube.rings > 0) {
       const r = Math.round((tube.rings - 1) * 0.62) * 3;
@@ -356,6 +356,7 @@ export function Tentacle({
         ref={suckers}
         args={[cupGeometry ?? undefined, suckerMaterial, tube.maxRings]}
         frustumCulled={false}
+        visible={!species.noSuckers}
         raycast={() => null}
       >
         {!cupGeometry && <cylinderGeometry args={[1, 1, 1, 14]} />}
