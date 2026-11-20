@@ -41,7 +41,7 @@ export function TaskRow({ task, canAct }: { task: Task; canAct: boolean }) {
           <span className={`size-2 shrink-0 rounded-full ${PRIORITY_DOT[task.priority]}`} />
           <span className="truncate">{task.title}</span>
           {task.description && !selected && (
-            <span className="shrink-0 text-xs text-foam/40" aria-label="Has notes">
+            <span className="shrink-0 text-xs text-foam/60" aria-label="Has notes">
               ¶
             </span>
           )}
@@ -65,7 +65,7 @@ export function TaskRow({ task, canAct }: { task: Task; canAct: boolean }) {
             {task.description ? (
               <p className="whitespace-pre-wrap text-foam/75">{task.description}</p>
             ) : (
-              <p className="text-foam/40">No notes.</p>
+              <p className="text-foam/60">No notes.</p>
             )}
             {canAct && (
               <div className="mt-2 flex gap-2 text-xs">

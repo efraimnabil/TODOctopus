@@ -31,7 +31,7 @@ export function AddTaskForm() {
         maxLength={TITLE_MAX}
         aria-label="New task"
         autoComplete="off"
-        className="w-full rounded-full border border-brand-pink/60 bg-transparent px-4 py-2 text-foam placeholder-foam/40 outline-none focus:ring-2 focus:ring-brand-pink/60"
+        className="w-full rounded-full border border-brand-pink/60 bg-transparent px-4 py-2 text-foam placeholder-foam/60 outline-none focus:ring-2 focus:ring-brand-pink/60"
       />
       <div className="flex items-center justify-between gap-2">
         <PriorityPicker value={priority} onChange={setPriority} />
@@ -43,7 +43,7 @@ export function AddTaskForm() {
           Grow
         </button>
       </div>
-      <p className="px-1 text-xs text-foam/45" aria-live="polite">
+      <p className="px-1 text-xs text-foam/60" aria-live="polite">
         {home ? (
           <>
             Grows on <span className="text-foam/70">{home.name}</span>

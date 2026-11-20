@@ -39,7 +39,7 @@ const PEOPLE = [
 
 export default function AboutPage() {
   return (
-    <main className="mx-auto max-w-3xl px-5 py-10 md:py-16">
+    <main id="main" className="mx-auto max-w-3xl px-5 py-10 md:py-16">
       <Link href="/" className="font-display text-2xl tracking-widest text-brand-gradient">
         TODOctopus
       </Link>

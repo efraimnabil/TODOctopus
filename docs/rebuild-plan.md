@@ -140,6 +140,14 @@ Each phase ends with something you can open and try. Phase 1 comes early on purp
 - SEO + Open Graph image (a rendered octopus), error tracking, basic analytics.
 - Production deploy on Vercel + custom domain; update the README; retire the Render deployments.
 - **Done when:** v2 is live and replaces v1.
+- *Built:*
+  - **Resilience:** `error.tsx`, `global-error.tsx` and `not-found.tsx`; a `SceneBoundary` so a failed WebGL start leaves the list playable.
+  - **Performance:** the starting quality is picked from the device (cores, memory, data-saver), and the frame-rate monitor can still drop it to "low".
+  - **Accessibility:** skip link, visible focus rings, `prefers-reduced-motion` in CSS, a live region that narrates adds/slashes/defeats, focus trapped in dialogs, contrast raised on small text, and a text alternative for the canvas.
+  - **E2E (`pnpm e2e`):** guest flow and refresh, cut → kill → trophy room, sign-up migration and sign back in, sort/filter, landing/About/404, keyboard. They run the production build against the dev database and delete their test users.
+  - **SEO:** metadata and Open Graph/Twitter cards (an actual render of the octopus), `robots`, `sitemap`, web manifest.
+  - **Analytics:** Vercel Web Analytics and Speed Insights (turn them on in the Vercel dashboard).
+  - **Not done:** a custom domain, error tracking such as Sentry (needs a DSN), and retiring the Render services. All three need access only the owner has.
 
 ### Backlog (after launch)
 - Due dates: overdue tentacles turn angry/red and the octopus inks the screen.

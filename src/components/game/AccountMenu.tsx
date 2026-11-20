@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type SubmitEvent } from "react";
 import { authClient } from "@/lib/auth-client";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 import { useGame } from "./GameProvider";
 
 type Mode = "sign-up" | "sign-in";
@@ -19,7 +20,7 @@ export function AccountMenu() {
   return (
     <div className="absolute top-4 right-4 flex items-center gap-2 md:top-6 md:right-6">
       {pending > 0 && (
-        <span className="text-xs text-foam/45" aria-live="polite">
+        <span className="text-xs text-foam/60" aria-live="polite">
           Saving…
         </span>
       )}
@@ -101,6 +102,7 @@ function AuthDialog({
   const [busy, setBusy] = useState(false);
   const panel = useRef<HTMLDivElement>(null);
   const signUp = mode === "sign-up";
+  useFocusTrap(panel);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();

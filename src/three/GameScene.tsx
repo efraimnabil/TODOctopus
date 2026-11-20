@@ -8,6 +8,7 @@ import { OctopusRig } from "./octopus/OctopusRig";
 import { DEFAULT_TUNING, type Tuning } from "./octopus/shared";
 import type { Species } from "./octopus/species";
 import { TentacleLabels } from "./labels";
+import { SceneBoundary } from "./SceneBoundary";
 import { SceneCanvas, useSceneKit, type Quality } from "./SceneCanvas";
 
 interface Props {
@@ -59,30 +60,32 @@ export default function GameScene({ species, quality, onSlow, showLabels }: Prop
 
   return (
     <>
-      <SceneCanvas
-        kit={kit}
-        quality={quality}
-        onSlow={onSlow}
-        palette={palette}
-        species={species}
-        distanceScale={species.view}
-      >
-        {model && (
-          <OctopusRig
-            key={`${model.id}-${species.id}`}
-            model={model}
-            species={species}
-            fx={fx}
-            tuning={tuning}
-            labels={showLabels ? labels : null}
-            hover={hover}
-            selectedId={selectedId}
-            onCut={cut}
-            onRetracted={retracted}
-            onDead={dead}
-          />
-        )}
-      </SceneCanvas>
+      <SceneBoundary>
+        <SceneCanvas
+          kit={kit}
+          quality={quality}
+          onSlow={onSlow}
+          palette={palette}
+          species={species}
+          distanceScale={species.view}
+        >
+          {model && (
+            <OctopusRig
+              key={`${model.id}-${species.id}`}
+              model={model}
+              species={species}
+              fx={fx}
+              tuning={tuning}
+              labels={showLabels ? labels : null}
+              hover={hover}
+              selectedId={selectedId}
+              onCut={cut}
+              onRetracted={retracted}
+              onDead={dead}
+            />
+          )}
+        </SceneCanvas>
+      </SceneBoundary>
       {showLabels && model?.status === "alive" && (
         <TentacleLabels
           store={labels}

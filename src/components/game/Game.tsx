@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 import { computeStats, livingOctopuses, tentaclesOf } from "@/game/rules";
+import type { Octopus } from "@/game/types";
 import GameScene from "@/three/GameScene";
+import { detectQuality } from "@/three/quality";
 import type { Quality } from "@/three/SceneCanvas";
 import {
   SPECIES,
@@ -27,13 +30,13 @@ export default function Game() {
 
 function GameScreen() {
   const ready = useGame((s) => s.status === "ready");
-  const [quality, setQuality] = useState<Quality>("high");
+  const [quality, setQuality] = useState<Quality>(detectQuality);
   const [showLabels, setShowLabels] = useState(true);
   const [speciesId, setSpeciesId] = useState<SpeciesId>(loadSpeciesChoice);
   useKeyboard();
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-abyss">
+    <main id="main" className="relative h-dvh w-full overflow-hidden bg-abyss">
       <GameScene
         species={SPECIES[speciesId]}
         quality={quality}
@@ -85,12 +88,23 @@ function GameScreen() {
           />
           <DefeatCard />
           <Toast />
+          <LiveAnnouncer />
           <p className="pointer-events-none absolute bottom-5 left-1/2 hidden -translate-x-1/2 text-sm text-foam/50 lg:block">
             Click or swipe a tentacle to slash it · drag to look around · ← → switch octopus
           </p>
         </>
       )}
-    </div>
+    </main>
+  );
+}
+
+/** Screen-reader narration of the 3D scene's events. */
+function LiveAnnouncer() {
+  const text = useGame((s) => s.announcement);
+  return (
+    <p role="status" aria-live="polite" className="sr-only">
+      {text}
+    </p>
   );
 }
 
@@ -138,15 +152,24 @@ function EmptySea() {
 function DefeatCard() {
   const id = useGame((s) => s.defeatedCard);
   const game = useGame((s) => s.game);
-  const dismiss = useGame((s) => s.dismissDefeat);
   const octopus = game.octopuses.find((o) => o.id === id);
   if (!octopus) return null;
+  return <DefeatDialog octopus={octopus} />;
+}
+
+function DefeatDialog({ octopus }: { octopus: Octopus }) {
+  const game = useGame((s) => s.game);
+  const dismiss = useGame((s) => s.dismissDefeat);
+  const panel = useRef<HTMLDivElement>(null);
+  useFocusTrap(panel);
   const held = tentaclesOf(game, octopus.id);
   const more = livingOctopuses(game).length > 0;
   return (
     <div className="absolute inset-0 grid place-items-center bg-abyss/40 p-4">
       <div
+        ref={panel}
         role="dialog"
+        aria-modal="true"
         aria-labelledby="defeat-title"
         className="glass w-full max-w-sm rounded-3xl p-8 text-center"
       >
