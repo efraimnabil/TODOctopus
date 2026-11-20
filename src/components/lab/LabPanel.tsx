@@ -78,12 +78,12 @@ export function LabPanel({
     return (
       <>
         {header}
-        <div className="glass absolute right-3 bottom-3 left-3 rounded-3xl p-4 md:right-auto md:left-1/2 md:w-[44rem] md:-translate-x-1/2">
+        <div className="glass absolute right-3 bottom-3 left-3 rounded-3xl p-4 md:right-auto md:left-1/2 md:w-[56rem] md:-translate-x-1/2">
           <h2 className="text-lg">Pick a body shape</h2>
           <p className="text-sm text-foam/60">
             Tap a name above an octopus, or choose here. You can switch any time.
           </p>
-          <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
+          <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-5">
             {SPECIES_LIST.map((s) => (
               <button
                 key={s.id}

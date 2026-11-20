@@ -1,3 +1,4 @@
+import type { SuckerLayout } from "../geometry/tube";
 import type { Tuning } from "./shared";
 
 export interface ArmShape {
@@ -55,6 +56,24 @@ export interface Species {
     mottle: number;
     rings?: { color: string; count: number };
   };
+  /** Bumpy wet-skin normal map; omitted = smooth skin */
+  skinDetail?: {
+    normalScale: number;
+    roughness: number;
+    clearcoat: number;
+    /** Texture repeats along/around an arm */
+    armRepeat: [number, number];
+    mantleRepeat: [number, number];
+  };
+  /** Sucker shape and layout; omitted = flat discs in two rows */
+  suckers?: SuckerLayout & { cup: boolean };
+  /** Skin webbing between neighbouring arms near the body */
+  web?: {
+    /** How far down the arms it reaches (0–1 of arm length) */
+    reach: number;
+    /** How deeply the free edge curves in between arms (0–1) */
+    scallop: number;
+  };
   tuning: Partial<Tuning>;
   /** Camera distance multiplier */
   view: number;
@@ -62,7 +81,7 @@ export interface Species {
   footprint: number;
 }
 
-export type SpeciesId = "classic" | "common" | "giant" | "blueRinged";
+export type SpeciesId = "classic" | "common" | "giant" | "blueRinged" | "realistic";
 
 export const SPECIES: Record<SpeciesId, Species> = {
   classic: {
@@ -159,6 +178,37 @@ export const SPECIES: Record<SpeciesId, Species> = {
     view: 0.95,
     footprint: 0.9,
   },
+  realistic: {
+    id: "realistic",
+    name: "Realistic",
+    blurb: "Modelled on real photos: webbed arms, cup suckers, wet bumpy skin.",
+    mantle: { radius: 0.56, stretch: 1.55, lean: 0.55, bottom: 0.78, bumps: 0.02, bumpFreq: 2.5, centerY: 1.62 },
+    skirt: { y: -0.5, radius: 0.5, height: 0.4 },
+    eyes: { radius: 0.13, position: [0.37, -0.33, 0.24], yaw: 1, iris: "#d9b04a" },
+    arm: { length: 5.4, baseRadius: 0.25, tipRadius: 0.006, taper: 1.7, anchorY: 0.86, anchorRing: 0.34 },
+    colors: {
+      mantleTop: "#b8321a",
+      skin: "#de4a22",
+      tip: "#f08a5a",
+      underside: "#f7d6c2",
+      spot: "#8a2410",
+      sucker: "#fbe9dc",
+      sheen: "#ffb48f",
+    },
+    pattern: { spotThreshold: 0.32, spotScale: 3.5, spotStrength: 0.3, mottle: 0.18 },
+    skinDetail: {
+      normalScale: 0.75,
+      roughness: 0.3,
+      clearcoat: 1,
+      armRepeat: [9, 1.5],
+      mantleRepeat: [3, 2],
+    },
+    suckers: { cup: true, size: 0.5, height: 0.55, step: 1, staggered: true },
+    web: { reach: 0.3, scallop: 0.6 },
+    tuning: { curl: 0.6, pitch: -0.45, wave: 0.32, sway: 0.22 },
+    view: 1.4,
+    footprint: 1.55,
+  },
 };
 
 export const SPECIES_LIST: Species[] = [
@@ -166,9 +216,10 @@ export const SPECIES_LIST: Species[] = [
   SPECIES.common,
   SPECIES.giant,
   SPECIES.blueRinged,
+  SPECIES.realistic,
 ];
 
-export const DEFAULT_SPECIES: SpeciesId = "giant";
+export const DEFAULT_SPECIES: SpeciesId = "realistic";
 
 const STORAGE_KEY = "todoctopus.species";
 

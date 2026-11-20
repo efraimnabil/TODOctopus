@@ -30,7 +30,7 @@ export function FitCamera({
   useEffect(() => {
     const aspect = width / Math.max(1, height);
     const base = lineup
-      ? aspect >= 1.4 ? 21 : aspect >= 1 ? 30 : 46
+      ? aspect >= 1.4 ? 38 : aspect >= 1 ? 52 : 80
       : aspect >= 1.4 ? 8.2 : aspect >= 1 ? 9.4 : aspect >= 0.7 ? 11 : 12.5;
     const distance = base * distanceScale;
     const drop = aspect < 0.9 ? (lineup ? 4 : 1.5) * distanceScale : 0;

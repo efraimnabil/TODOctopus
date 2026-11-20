@@ -82,7 +82,7 @@ function Seabed() {
       const z = pos.getZ(i);
       // Flat where the octopus sits, dunes further out.
       // (wide enough for the four-octopus comparison row)
-      const flat = THREE.MathUtils.smoothstep(Math.hypot(x * 0.55, z), 4, 12);
+      const flat = THREE.MathUtils.smoothstep(Math.hypot(x * 0.35, z), 5, 13);
       const dunes = noise.noise(x * 0.12, z * 0.12) * 0.9 + noise.noise(x * 0.5, z * 0.5) * 0.12;
       pos.setY(i, dunes * flat);
     }

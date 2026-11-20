@@ -3,14 +3,19 @@ import { SimplexNoise } from "three/examples/jsm/math/SimplexNoise.js";
 import { mulberry32 } from "@/lib/random";
 import { smoothstep, type Palette } from "./constants";
 import type { Species } from "./species";
+import { skinNormalMap } from "./skinDetail";
+
+export type SkinPart = "arm" | "mantle" | "plain";
 
 /** Wet, soft skin: clearcoat for the shine, sheen for the velvet rim. */
 export function createSkinMaterial(
   palette: Palette,
   vertexColors = true,
   color?: THREE.Color,
+  species?: Species,
+  part: SkinPart = "plain",
 ) {
-  return new THREE.MeshPhysicalMaterial({
+  const material = new THREE.MeshPhysicalMaterial({
     vertexColors,
     color: color ?? 0xffffff,
     roughness: 0.45,
@@ -22,6 +27,22 @@ export function createSkinMaterial(
     emissive: new THREE.Color("#ff3fbf"),
     emissiveIntensity: 0,
   });
+  const detail = species?.skinDetail;
+  if (detail) {
+    material.roughness = detail.roughness;
+    material.clearcoat = detail.clearcoat;
+    const [u, v] =
+      part === "arm" ? detail.armRepeat : part === "mantle" ? detail.mantleRepeat : [2, 2];
+    material.normalMap = skinNormalMap(u, v);
+    material.normalScale.setScalar(detail.normalScale);
+  }
+  return material;
+}
+
+/** Dispose a skin material together with its own normal-map copy. */
+export function disposeSkinMaterial(material: THREE.MeshPhysicalMaterial) {
+  material.normalMap?.dispose();
+  material.dispose();
 }
 
 export function createSuckerMaterial(palette: Palette) {

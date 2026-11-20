@@ -6,13 +6,16 @@ import type { FxBus } from "../fx/FxBus";
 import { useLazyRef } from "../useLazyRef";
 import { createPalette, damp } from "./constants";
 import { Eyes } from "./Eyes";
+import type { TubeBuilder } from "../geometry/tube";
+import { ArmWebs } from "./ArmWebs";
 import {
   createMantleGeometry,
   createSkinMaterial,
   createSuckerMaterial,
+  disposeSkinMaterial,
 } from "./materials";
 import type { LabelStore } from "../labels";
-import type { OctoState, TuningRef } from "./shared";
+import { createHoverState, type HoverState, type OctoState, type TuningRef } from "./shared";
 import type { Species } from "./species";
 import { Tentacle } from "./Tentacle";
 
@@ -24,6 +27,8 @@ interface Props {
   labels: LabelStore | null;
   /** False for display-only octopuses (comparison lineup) */
   interactive?: boolean;
+  /** Shared so the canvas can slash a hovered arm that lifted off the cursor */
+  hover?: HoverState;
   onCut: (id: string, cutIndex: number) => void;
   onRetracted: (id: string) => void;
   onDead: () => void;
@@ -38,6 +43,7 @@ export function OctopusRig({
   tuning,
   labels,
   interactive = true,
+  hover: sharedHover,
   onCut,
   onRetracted,
   onDead,
@@ -49,6 +55,9 @@ export function OctopusRig({
     death: 0,
   }));
   const motion = useRef({ t: 0, scaleVel: 0, deathT: 0, deadSent: false });
+  const tubes = useMemo(() => new Map<number, TubeBuilder>(), []);
+  const ownHover = useMemo(() => createHoverState(), []);
+  const hover = sharedHover ?? ownHover;
   const head = useRef<THREE.Group>(null);
   const mantle = useRef<THREE.Mesh>(null);
   const shadow = useRef<THREE.Mesh>(null);
@@ -56,8 +65,15 @@ export function OctopusRig({
   const palette = useMemo(() => createPalette(model.seed, species), [model.seed, species]);
   const mantleY = species.mantle.centerY;
   const parts = useMemo(() => {
-    const skin = createSkinMaterial(palette);
-    const lid = createSkinMaterial(palette, false, palette.skin);
+    const skin = createSkinMaterial(palette, true, undefined, species, "mantle");
+    const lid = createSkinMaterial(palette, false, palette.skin, species);
+    const web = createSkinMaterial(
+      palette,
+      false,
+      palette.skin.clone().lerp(palette.underside, 0.25),
+      species,
+    );
+    web.side = THREE.DoubleSide;
     const white = new THREE.MeshPhysicalMaterial({
       color: "#fff6ee",
       roughness: 0.12,
@@ -86,18 +102,21 @@ export function OctopusRig({
       mantleGeo: createMantleGeometry(model.seed, species, palette),
       skin,
       lid,
+      web,
       white,
       iris,
       pupil,
       sucker,
       shadowMat,
-      fading: [skin, lid, white, iris, pupil, sucker],
+      fading: [skin, lid, web, white, iris, pupil, sucker],
+      skins: [skin, lid, web],
     };
   }, [model.seed, palette, species]);
 
   useEffect(
     () => () => {
       parts.mantleGeo.dispose();
+      parts.skins.forEach(disposeSkinMaterial);
       parts.fading.forEach((m) => m.dispose());
       parts.shadowMat.map?.dispose();
       parts.shadowMat.dispose();
@@ -222,10 +241,13 @@ export function OctopusRig({
           fx={fx}
           tuning={tuning}
           labels={model.status === "alive" ? labels : null}
+          tubes={tubes}
+          hover={hover}
           onCut={onCut}
           onRetracted={onRetracted}
         />
       ))}
+      {species.web && <ArmWebs tubes={tubes} web={species.web} material={parts.web} />}
     </group>
   );
 }

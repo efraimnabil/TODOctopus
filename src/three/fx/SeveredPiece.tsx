@@ -7,9 +7,15 @@ import {
   integrate,
   solveDistances,
 } from "../physics/verlet";
-import { SUBDIVISIONS, TubeBuilder, writeSuckers } from "../geometry/tube";
+import { DISC_SUCKERS, SUBDIVISIONS, TubeBuilder, writeSuckers } from "../geometry/tube";
 import { STEP, radiusAt, type Palette } from "../octopus/constants";
-import { armColor, createSkinMaterial, createSuckerMaterial } from "../octopus/materials";
+import {
+  armColor,
+  createSkinMaterial,
+  createSuckerMaterial,
+  disposeSkinMaterial,
+} from "../octopus/materials";
+import { getCupSuckerGeometry } from "../octopus/skinDetail";
 import type { Species } from "../octopus/species";
 import { useLazyRef } from "../useLazyRef";
 import type { FxBus, SeveredSpawn } from "./FxBus";
@@ -31,10 +37,12 @@ interface Props {
 export function SeveredPiece({ spawn, palette, species, fx, onDone }: Props) {
   const tube = useMemo(() => new TubeBuilder(spawn.count), [spawn.count]);
   const material = useMemo(() => {
-    const m = createSkinMaterial(palette);
+    const m = createSkinMaterial(palette, true, undefined, species, "arm");
     m.transparent = true;
     return m;
-  }, [palette]);
+  }, [palette, species]);
+  const suckerLayout = species.suckers ?? DISC_SUCKERS;
+  const cupGeometry = species.suckers?.cup ? getCupSuckerGeometry() : null;
   const suckerMat = useMemo(() => {
     const m = createSuckerMaterial(palette);
     m.transparent = true;
@@ -79,7 +87,7 @@ export function SeveredPiece({ spawn, palette, species, fx, onDone }: Props) {
   useEffect(
     () => () => {
       tube.dispose();
-      material.dispose();
+      disposeSkinMaterial(material);
       suckerMat.dispose();
     },
     [tube, material, suckerMat],
@@ -115,7 +123,7 @@ export function SeveredPiece({ spawn, palette, species, fx, onDone }: Props) {
 
     s.fade = 1 - THREE.MathUtils.clamp((s.age - 2.8) / (LIFETIME - 2.8), 0, 1);
     tube.update(chain.pos, chain.count, spawn.side, s.radiusOfRing, s.colorOfRing);
-    if (suckers.current) writeSuckers(suckers.current, tube, 2, tube.rings - 2);
+    if (suckers.current) writeSuckers(suckers.current, tube, 2, tube.rings - 2, suckerLayout);
     material.opacity = s.fade;
     suckerMat.opacity = s.fade;
 
@@ -130,11 +138,11 @@ export function SeveredPiece({ spawn, palette, species, fx, onDone }: Props) {
       <mesh geometry={tube.geometry} material={material} frustumCulled={false} raycast={() => null} />
       <instancedMesh
         ref={suckers}
-        args={[undefined, suckerMat, tube.maxRings]}
+        args={[cupGeometry ?? undefined, suckerMat, tube.maxRings]}
         frustumCulled={false}
         raycast={() => null}
       >
-        <cylinderGeometry args={[1, 1, 1, 14]} />
+        {!cupGeometry && <cylinderGeometry args={[1, 1, 1, 14]} />}
       </instancedMesh>
     </group>
   );

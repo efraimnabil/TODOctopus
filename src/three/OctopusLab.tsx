@@ -20,7 +20,7 @@ import { FxBus } from "./fx/FxBus";
 import { FxDriver, FxLayer, ShakeGroup } from "./fx/FxLayer";
 import { createPalette } from "./octopus/constants";
 import { OctopusRig } from "./octopus/OctopusRig";
-import { DEFAULT_TUNING, type Tuning } from "./octopus/shared";
+import { DEFAULT_TUNING, createHoverState, type Tuning } from "./octopus/shared";
 import {
   SPECIES,
   SPECIES_LIST,
@@ -42,7 +42,7 @@ const subscribeNarrow = (cb: () => void) => {
   return () => media.removeEventListener("change", cb);
 };
 
-const LINEUP_X = [-12, -4, 4, 12];
+const LINEUP_X = [-18, -9, 0, 9, 18];
 const NOOP = () => {};
 
 /** Display-only octopus with all 8 arms, used to compare body shapes. */
@@ -86,6 +86,8 @@ export default function OctopusLab() {
   );
   const fx = useMemo(() => new FxBus(), []);
   const labels = useMemo(() => new LabelStore(), []);
+  const hover = useMemo(() => createHoverState(), []);
+  const pointerDown = useRef({ x: 0, y: 0 });
   const palette = useMemo(
     () => createPalette(state.octopus.seed, species),
     [state.octopus.seed, species],
@@ -155,12 +157,24 @@ export default function OctopusLab() {
         camera={{ position: [0, 2.8, 8.2], fov: 38 }}
         // Opaque canvas: nothing in the scene should ever show the page through.
         gl={{ antialias: quality === "high", alpha: false }}
+        onPointerDown={(e) => {
+          pointerDown.current = { x: e.clientX, y: e.clientY };
+        }}
+        // A hovered arm lifts a little and may slide off the cursor: a click
+        // that misses every mesh still slashes the arm that's hovered.
+        onPointerMissed={(e) => {
+          const moved = Math.hypot(
+            e.clientX - pointerDown.current.x,
+            e.clientY - pointerDown.current.y,
+          );
+          if (moved < 6) hover.cut?.();
+        }}
       >
         <Suspense fallback={null}>
           <PerformanceMonitor onDecline={() => setQuality("low")} />
           <FxDriver fx={fx} />
           <ShakeGroup fx={fx}>
-            <Underwater quality={quality} fogDensity={lineup ? 0.018 : 0.055} />
+            <Underwater quality={quality} fogDensity={lineup ? 0.011 : 0.055} />
             {lineup ? (
               SPECIES_LIST.map((s, i) => (
                 <group key={s.id} position={[LINEUP_X[i], 0, 0]}>
@@ -185,6 +199,7 @@ export default function OctopusLab() {
                 fx={fx}
                 tuning={tuning}
                 labels={showLabels ? labels : null}
+                hover={hover}
                 onCut={cut}
                 onRetracted={retracted}
                 onDead={dead}
@@ -197,7 +212,7 @@ export default function OctopusLab() {
             enablePan={false}
             enableDamping
             minDistance={3.5}
-            maxDistance={lineup ? 45 : 18}
+            maxDistance={lineup ? 90 : 18}
             minPolarAngle={0.5}
             maxPolarAngle={1.5}
           />

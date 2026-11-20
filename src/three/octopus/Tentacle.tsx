@@ -11,7 +11,7 @@ import {
   pinPoint,
   solveDistances,
 } from "../physics/verlet";
-import { SUBDIVISIONS, TubeBuilder, writeSuckers } from "../geometry/tube";
+import { DISC_SUCKERS, SUBDIVISIONS, TubeBuilder, writeSuckers } from "../geometry/tube";
 import type { FxBus, Vec3 } from "../fx/FxBus";
 import { useLazyRef } from "../useLazyRef";
 import {
@@ -23,9 +23,10 @@ import {
   segmentLength,
   type Palette,
 } from "./constants";
-import { armColor, createSkinMaterial } from "./materials";
+import { armColor, createSkinMaterial, disposeSkinMaterial } from "./materials";
+import { getCupSuckerGeometry } from "./skinDetail";
 import { createPoseParams, writePose } from "./pose";
-import type { OctoState, TuningRef } from "./shared";
+import type { HoverState, OctoState, TuningRef } from "./shared";
 import type { Species } from "./species";
 
 interface Props {
@@ -37,6 +38,9 @@ interface Props {
   fx: FxBus;
   tuning: TuningRef;
   labels: LabelStore | null;
+  /** Shared registry so the arm webbing can read neighbouring arms */
+  tubes: Map<number, TubeBuilder>;
+  hover: HoverState;
   interactive: boolean;
   onCut: (id: string, cutIndex: number) => void;
   onRetracted: (id: string) => void;
@@ -51,6 +55,8 @@ export function Tentacle({
   fx,
   tuning,
   labels,
+  tubes,
+  hover,
   interactive,
   onCut,
   onRetracted,
@@ -62,7 +68,14 @@ export function Tentacle({
   const arm = species.arm;
 
   const [hovered, setHovered] = useState(false);
-  const material = useMemo(() => createSkinMaterial(palette), [palette]);
+  /** Seconds the pointer has been clearly away from this hovered arm */
+  const awayFor = useRef(0);
+  const material = useMemo(
+    () => createSkinMaterial(palette, true, undefined, species, "arm"),
+    [palette, species],
+  );
+  const suckerLayout = species.suckers ?? DISC_SUCKERS;
+  const cupGeometry = species.suckers?.cup ? getCupSuckerGeometry() : null;
   const tube = useMemo(() => new TubeBuilder(CHAIN_POINTS), []);
   const suckers = useRef<THREE.InstancedMesh>(null);
 
@@ -142,13 +155,14 @@ export function Tentacle({
     s.activeCount = idx + 1;
   }, [model.status, model.cutIndex, model.slot, fx, rx, rz, sim]);
 
-  useEffect(
-    () => () => {
-      material.dispose();
-    },
-    [material],
-  );
+  useEffect(() => () => disposeSkinMaterial(material), [material]);
   useEffect(() => () => tube.dispose(), [tube]);
+  useEffect(() => {
+    tubes.set(model.slot, tube);
+    return () => {
+      if (tubes.get(model.slot) === tube) tubes.delete(model.slot);
+    };
+  }, [tubes, tube, model.slot]);
 
   useEffect(() => {
     if (!labels) return;
@@ -157,13 +171,22 @@ export function Tentacle({
   }, [labels, hovered, canCut, model.id]);
 
   useEffect(() => {
+    if (!hovered) return;
+    document.body.style.cursor = "crosshair";
+    return () => {
+      // Another arm may have taken over the hover; leave its cursor alone.
+      if (!hover.owner) document.body.style.cursor = "";
+    };
+  }, [hovered, hover]);
+
+  useEffect(() => {
     if (labels && !canCut) labels.anchors.delete(model.id);
     return () => {
       labels?.anchors.delete(model.id);
     };
   }, [labels, canCut, model.id]);
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     const s = sim.current;
     const tune = tuning.current;
     const dt = Math.min(delta, 1 / 20) * fx.timeScale;
@@ -185,16 +208,18 @@ export function Tentacle({
     const count = s.activeCount;
     chain.count = count;
     chain.rest = segmentLength(arm) * sc * Math.max(0.02, s.grow);
-    s.radiusScale = sc * (0.35 + 0.65 * s.grow);
+    s.radiusScale = sc * (0.35 + 0.65 * s.grow) * (1 + 0.1 * s.hover);
 
     const hurt = fx.hurt;
     pose.count = count;
     pose.segment = chain.rest;
-    pose.pitch = tune.pitch + s.hover * 0.9 + hurt * 0.45 + octo.death * 0.7;
+    // Hover reacts in place (glow, tense, slight rise) rather than swinging
+    // the arm away from the cursor.
+    pose.pitch = tune.pitch + s.hover * 0.12 + hurt * 0.45 + octo.death * 0.7;
     pose.curl = (s.stump ? 3.6 : tune.curl) + hurt * 1.4 + octo.death * 1.6;
-    pose.waveAmp = tune.wave * (1 + hurt * 1.5);
+    pose.waveAmp = tune.wave * (1 + hurt * 1.5) * (1 - 0.7 * s.hover);
     pose.waveSpeed = 1.4 + hurt * 4;
-    pose.swayAmp = tune.sway;
+    pose.swayAmp = tune.sway * (1 - 0.7 * s.hover);
     pose.phase = s.phase;
     pose.time = s.time;
     writePose(target, ax, ay, az, rx, rz, pose);
@@ -220,9 +245,20 @@ export function Tentacle({
     if (steps === 4) s.acc = 0;
 
     tube.update(chain.pos, count, s.side, shapeFns.radiusOfRing, shapeFns.colorOfRing);
-    if (suckers.current) writeSuckers(suckers.current, tube, 3, tube.rings - 3);
+    if (suckers.current) writeSuckers(suckers.current, tube, 3, tube.rings - 3, suckerLayout);
 
-    material.emissiveIntensity = s.hover * 0.45;
+    if (hovered) {
+      if (!canCut || hover.owner !== model.id) {
+        release();
+      } else {
+        const near = nearestOnScreen(tube, state.camera, state.pointer, state.size);
+        awayFor.current = near.distance > HOVER_KEEP_PX ? awayFor.current + delta : 0;
+        if (awayFor.current > HOVER_RELEASE_S) release();
+        else hover.cut = () => onCut(model.id, Math.round(near.ring / SUBDIVISIONS));
+      }
+    }
+
+    material.emissiveIntensity = s.hover * 0.55;
     material.opacity = octo.opacity;
     material.transparent = octo.opacity < 0.999;
 
@@ -234,20 +270,25 @@ export function Tentacle({
     }
   });
 
+  function release() {
+    awayFor.current = 0;
+    setHovered(false);
+    if (hover.owner === model.id) {
+      hover.owner = null;
+      hover.cut = null;
+    }
+  }
+
   const handleOver = (e: ThreeEvent<PointerEvent>) => {
     if (!canCut) return;
     e.stopPropagation();
+    awayFor.current = 0;
+    hover.owner = model.id;
     setHovered(true);
-    document.body.style.cursor = "crosshair";
-  };
-  const handleOut = () => {
-    setHovered(false);
-    document.body.style.cursor = "";
   };
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
     if (!canCut || e.delta > 6) return;
     e.stopPropagation();
-    document.body.style.cursor = "";
     const ring = tube.nearestRing(e.point.x, e.point.y, e.point.z);
     onCut(model.id, Math.round(ring / SUBDIVISIONS));
   };
@@ -259,17 +300,48 @@ export function Tentacle({
         material={material}
         frustumCulled={false}
         onPointerOver={interactive ? handleOver : undefined}
-        onPointerOut={interactive ? handleOut : undefined}
         onClick={interactive ? handleClick : undefined}
       />
       <instancedMesh
         ref={suckers}
-        args={[undefined, suckerMaterial, tube.maxRings]}
+        args={[cupGeometry ?? undefined, suckerMaterial, tube.maxRings]}
         frustumCulled={false}
         raycast={() => null}
       >
-        <cylinderGeometry args={[1, 1, 1, 14]} />
+        {!cupGeometry && <cylinderGeometry args={[1, 1, 1, 14]} />}
       </instancedMesh>
     </group>
   );
+}
+
+/** Keep the hover while the pointer is within this many pixels of the arm */
+const HOVER_KEEP_PX = 70;
+/** …and drop it after the pointer has been further away for this long */
+const HOVER_RELEASE_S = 0.25;
+
+const projected = new THREE.Vector3();
+
+/** Closest ring of the arm to the pointer, in screen pixels. */
+function nearestOnScreen(
+  tube: TubeBuilder,
+  camera: THREE.Camera,
+  pointer: THREE.Vector2,
+  size: { width: number; height: number },
+) {
+  const px = (pointer.x * 0.5 + 0.5) * size.width;
+  const py = (-pointer.y * 0.5 + 0.5) * size.height;
+  let distance = Infinity;
+  let ring = 0;
+  for (let r = 0; r < tube.rings; r += 2) {
+    const k = r * 3;
+    projected.set(tube.centers[k], tube.centers[k + 1], tube.centers[k + 2]).project(camera);
+    const dx = (projected.x * 0.5 + 0.5) * size.width - px;
+    const dy = (-projected.y * 0.5 + 0.5) * size.height - py;
+    const d = Math.hypot(dx, dy);
+    if (d < distance) {
+      distance = d;
+      ring = r;
+    }
+  }
+  return { distance, ring };
 }

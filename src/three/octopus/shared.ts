@@ -32,3 +32,19 @@ export const DEFAULT_TUNING: Tuning = {
 };
 
 export type TuningRef = RefObject<Tuning>;
+
+/**
+ * Which arm the pointer is "on". Hover is sticky: it starts when the pointer
+ * touches an arm and ends only once the pointer is clearly away from that
+ * arm on screen. (Arms lift when hovered, which would otherwise move them out
+ * from under the cursor and make them bob up and down forever.)
+ */
+export interface HoverState {
+  owner: string | null;
+  /** Slashes the hovered arm at the point nearest the pointer */
+  cut: (() => void) | null;
+}
+
+export function createHoverState(): HoverState {
+  return { owner: null, cut: null };
+}

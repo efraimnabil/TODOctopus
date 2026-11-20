@@ -68,6 +68,16 @@ export class TubeBuilder {
     this.geometry.setAttribute("position", dyn(this.positions));
     this.geometry.setAttribute("normal", dyn(this.normals));
     this.geometry.setAttribute("color", dyn(this.colors));
+    // Static UVs: u runs along the arm, v around it (for skin normal maps).
+    const uvs = new Float32Array(verts * 2);
+    for (let r = 0; r < this.maxRings; r++) {
+      for (let j = 0; j <= radial; j++) {
+        const k = (r * (radial + 1) + j) * 2;
+        uvs[k] = r / (this.maxRings - 1);
+        uvs[k + 1] = j / radial;
+      }
+    }
+    this.geometry.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
     // The skin moves every frame; a generous fixed bound avoids recomputing.
     this.geometry.boundingSphere = new THREE.Sphere(
       new THREE.Vector3(0, 1, 0),
@@ -231,20 +241,35 @@ const tmpQuat = new THREE.Quaternion();
 const tmpScale = new THREE.Vector3();
 const tmpMat = new THREE.Matrix4();
 
-/** Two rows of suckers along the underside of a tube. */
+export interface SuckerLayout {
+  /** Sucker radius relative to the arm radius */
+  size: number;
+  /** Height relative to the sucker radius */
+  height: number;
+  /** Place a sucker every `step` rings */
+  step: number;
+  /** One staggered zig-zag row (real octopus) instead of two side-by-side rows */
+  staggered: boolean;
+}
+
+export const DISC_SUCKERS: SuckerLayout = { size: 0.42, height: 0.45, step: 2, staggered: false };
+
+/** Suckers along the underside of a tube. */
 export function writeSuckers(
   mesh: THREE.InstancedMesh,
   tube: TubeBuilder,
   fromRing: number,
   toRing: number,
+  layout: SuckerLayout = DISC_SUCKERS,
 ): void {
   let k = 0;
   const max = mesh.instanceMatrix.count;
-  for (let r = fromRing; r < toRing; r += 2) {
+  for (let r = fromRing; r < toRing; r += layout.step) {
     const rad = tube.radii[r];
     if (rad < 0.018) continue;
     const c = r * 3;
-    for (const offset of [-0.42, 0.42]) {
+    const offsets = layout.staggered ? [(r / layout.step) % 2 ? 0.36 : -0.36] : [-0.42, 0.42];
+    for (const offset of offsets) {
       if (k >= max) break;
       const a = Math.PI / 2 + offset;
       const ca = Math.cos(a);
@@ -255,10 +280,10 @@ export function writeSuckers(
         ca * tube.sides[c + 2] + sa * tube.ups[c + 2],
       );
       tmpPos.set(tube.centers[c], tube.centers[c + 1], tube.centers[c + 2]);
-      tmpPos.addScaledVector(tmpNrm, rad * 0.9);
+      tmpPos.addScaledVector(tmpNrm, rad * 0.88);
       tmpQuat.setFromUnitVectors(UP, tmpNrm);
-      const s = rad * 0.42;
-      tmpScale.set(s, s * 0.45, s);
+      const s = rad * layout.size;
+      tmpScale.set(s, s * layout.height, s);
       tmpMat.compose(tmpPos, tmpQuat, tmpScale);
       mesh.setMatrixAt(k++, tmpMat);
     }
