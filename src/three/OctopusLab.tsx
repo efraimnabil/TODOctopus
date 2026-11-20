@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -10,17 +9,13 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, PerformanceMonitor } from "@react-three/drei";
 import { Leva, useControls } from "leva";
 import { createLabState, labReducer } from "@/game/lab";
-import type { Octopus, Priority } from "@/game/types";
+import type { Octopus, Priority } from "@/game/scene";
 import { LabPanel } from "@/components/lab/LabPanel";
-import { FxBus } from "./fx/FxBus";
-import { FxDriver, FxLayer, ShakeGroup } from "./fx/FxLayer";
 import { createPalette } from "./octopus/constants";
 import { OctopusRig } from "./octopus/OctopusRig";
-import { DEFAULT_TUNING, createHoverState, type Tuning } from "./octopus/shared";
+import { DEFAULT_TUNING, type Tuning } from "./octopus/shared";
 import {
   SPECIES,
   SPECIES_LIST,
@@ -28,12 +23,10 @@ import {
   saveSpeciesChoice,
   type SpeciesId,
 } from "./octopus/species";
-import { Effects } from "./scene/Effects";
-import { FitCamera } from "./scene/FitCamera";
-import { Underwater } from "./scene/Underwater";
-import { LabelProjector, LabelStore, SpeciesTags, TentacleLabels } from "./labels";
+import { SpeciesTags, TentacleLabels } from "./labels";
+import { SceneCanvas, useSceneKit, type Quality } from "./SceneCanvas";
 
-export type Quality = "high" | "low";
+export type { Quality };
 
 const NARROW = "(max-width: 767px)";
 const subscribeNarrow = (cb: () => void) => {
@@ -84,10 +77,8 @@ export default function OctopusLab() {
     () => window.matchMedia(NARROW).matches,
     () => false,
   );
-  const fx = useMemo(() => new FxBus(), []);
-  const labels = useMemo(() => new LabelStore(), []);
-  const hover = useMemo(() => createHoverState(), []);
-  const pointerDown = useRef({ x: 0, y: 0 });
+  const kit = useSceneKit();
+  const { fx, labels, hover } = kit;
   const palette = useMemo(
     () => createPalette(state.octopus.seed, species),
     [state.octopus.seed, species],
@@ -117,16 +108,6 @@ export default function OctopusLab() {
     [],
   );
 
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => {
-      fx.reducedMotion = media.matches;
-    };
-    sync();
-    media.addEventListener("change", sync);
-    return () => media.removeEventListener("change", sync);
-  }, [fx]);
-
   const cut = useCallback((id: string, cutIndex?: number) => dispatch({ type: "cut", id, cutIndex }), []);
   const retracted = useCallback((id: string) => dispatch({ type: "retracted", id }), []);
   const dead = useCallback(() => dispatch({ type: "dead" }), []);
@@ -150,77 +131,46 @@ export default function OctopusLab() {
 
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-abyss">
-      <Canvas
-        // Fixed for the whole session: changing dpr at runtime can race a
-        // resize and leave the renderer and canvas at different sizes.
-        dpr={[1, 2]}
-        camera={{ position: [0, 2.8, 8.2], fov: 38 }}
-        // Opaque canvas: nothing in the scene should ever show the page through.
-        gl={{ antialias: quality === "high", alpha: false }}
-        onPointerDown={(e) => {
-          pointerDown.current = { x: e.clientX, y: e.clientY };
-        }}
-        // A hovered arm lifts a little and may slide off the cursor: a click
-        // that misses every mesh still slashes the arm that's hovered.
-        onPointerMissed={(e) => {
-          const moved = Math.hypot(
-            e.clientX - pointerDown.current.x,
-            e.clientY - pointerDown.current.y,
-          );
-          if (moved < 6) hover.cut?.();
-        }}
+      <SceneCanvas
+        kit={kit}
+        quality={quality}
+        onSlow={() => setQuality("low")}
+        palette={palette}
+        species={species}
+        distanceScale={lineup ? 1 : species.view}
+        lineup={lineup}
       >
-        <Suspense fallback={null}>
-          <PerformanceMonitor onDecline={() => setQuality("low")} />
-          <FxDriver fx={fx} />
-          <ShakeGroup fx={fx}>
-            <Underwater quality={quality} fogDensity={lineup ? 0.011 : 0.055} />
-            {lineup ? (
-              SPECIES_LIST.map((s, i) => (
-                <group key={s.id} position={[LINEUP_X[i], 0, 0]}>
-                  <OctopusRig
-                    model={LINEUP_MODEL}
-                    species={s}
-                    fx={fx}
-                    tuning={lineupTuning[s.id]}
-                    labels={null}
-                    interactive={false}
-                    onCut={NOOP}
-                    onRetracted={NOOP}
-                    onDead={NOOP}
-                  />
-                </group>
-              ))
-            ) : (
+        {lineup ? (
+          SPECIES_LIST.map((s, i) => (
+            <group key={s.id} position={[LINEUP_X[i], 0, 0]}>
               <OctopusRig
-                key={`${state.octopus.id}-${species.id}`}
-                model={state.octopus}
-                species={species}
+                model={LINEUP_MODEL}
+                species={s}
                 fx={fx}
-                tuning={tuning}
-                labels={showLabels ? labels : null}
-                hover={hover}
-                onCut={cut}
-                onRetracted={retracted}
-                onDead={dead}
+                tuning={lineupTuning[s.id]}
+                labels={null}
+                interactive={false}
+                onCut={NOOP}
+                onRetracted={NOOP}
+                onDead={NOOP}
               />
-            )}
-            <FxLayer fx={fx} palette={palette} species={species} />
-          </ShakeGroup>
-          <OrbitControls
-            makeDefault
-            enablePan={false}
-            enableDamping
-            minDistance={3.5}
-            maxDistance={lineup ? 90 : 18}
-            minPolarAngle={0.5}
-            maxPolarAngle={1.5}
+            </group>
+          ))
+        ) : (
+          <OctopusRig
+            key={`${state.octopus.id}-${species.id}`}
+            model={state.octopus}
+            species={species}
+            fx={fx}
+            tuning={tuning}
+            labels={showLabels ? labels : null}
+            hover={hover}
+            onCut={cut}
+            onRetracted={retracted}
+            onDead={dead}
           />
-          <FitCamera distanceScale={lineup ? 1 : species.view} lineup={lineup} />
-          <LabelProjector store={labels} />
-          {quality === "high" && <Effects />}
-        </Suspense>
-      </Canvas>
+        )}
+      </SceneCanvas>
 
       {lineup ? (
         <SpeciesTags

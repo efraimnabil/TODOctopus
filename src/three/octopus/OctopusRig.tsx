@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import type { Octopus } from "@/game/types";
+import type { Octopus } from "@/game/scene";
 import type { FxBus } from "../fx/FxBus";
 import { useLazyRef } from "../useLazyRef";
 import { createPalette, damp } from "./constants";
@@ -29,6 +29,8 @@ interface Props {
   interactive?: boolean;
   /** Shared so the canvas can slash a hovered arm that lifted off the cursor */
   hover?: HoverState;
+  /** Task picked in the list: its tentacle glows */
+  selectedId?: string | null;
   onCut: (id: string, cutIndex: number) => void;
   onRetracted: (id: string) => void;
   onDead: () => void;
@@ -44,6 +46,7 @@ export function OctopusRig({
   labels,
   interactive = true,
   hover: sharedHover,
+  selectedId = null,
   onCut,
   onRetracted,
   onDead,
@@ -243,6 +246,7 @@ export function OctopusRig({
           labels={model.status === "alive" ? labels : null}
           tubes={tubes}
           hover={hover}
+          selected={t.id === selectedId}
           onCut={onCut}
           onRetracted={onRetracted}
         />

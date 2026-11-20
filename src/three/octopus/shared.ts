@@ -43,8 +43,10 @@ export interface HoverState {
   owner: string | null;
   /** Slashes the hovered arm at the point nearest the pointer */
   cut: (() => void) | null;
+  /** Told whenever the hovered arm changes (task id, or null) */
+  onChange: ((id: string | null) => void) | null;
 }
 
 export function createHoverState(): HoverState {
-  return { owner: null, cut: null };
+  return { owner: null, cut: null, onChange: null };
 }

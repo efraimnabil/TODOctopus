@@ -2,7 +2,7 @@
  * Local-only game state for the /lab prototype.
  * Phase 2 replaces this with the real rules module + storage.
  */
-import type { Octopus, Priority, Tentacle } from "./types";
+import type { Octopus, Priority, Tentacle } from "./scene";
 
 export const MAX_TENTACLES = 8;
 

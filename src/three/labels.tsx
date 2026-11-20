@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import type { Tentacle } from "@/game/types";
+import type { Tentacle } from "@/game/scene";
+import { PRIORITY_DOT } from "@/components/priority";
 
 /**
  * Task labels drawn as plain DOM above the canvas. Tentacles publish a world
@@ -12,6 +13,7 @@ export class LabelStore {
   readonly anchors = new Map<string, THREE.Vector3>();
   readonly elements = new Map<string, HTMLElement>();
   hovered: string | null = null;
+  selected: string | null = null;
 
   anchor(id: string): THREE.Vector3 {
     let v = this.anchors.get(id);
@@ -38,25 +40,25 @@ export function LabelProjector({ store }: { store: LabelStore }) {
       const x = (projected.x * 0.5 + 0.5) * size.width;
       const y = (-projected.y * 0.5 + 0.5) * size.height;
       el.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
-      el.style.opacity = behind ? "0" : store.hovered === id ? "1" : "0.85";
+      el.style.opacity = behind ? "0" : store.hovered === id || store.selected === id ? "1" : "0.85";
     });
   });
   return null;
 }
 
-const PRIORITY_DOT: Record<1 | 2 | 3, string> = {
-  1: "bg-emerald-400",
-  2: "bg-amber-400",
-  3: "bg-rose-500",
-};
-
 export function TentacleLabels({
   store,
   tentacles,
+  selectedId = null,
 }: {
   store: LabelStore;
   tentacles: Tentacle[];
+  selectedId?: string | null;
 }) {
+  useEffect(() => {
+    store.selected = selectedId;
+  }, [store, selectedId]);
+
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
       {tentacles.map((t) => (
@@ -66,7 +68,9 @@ export function TentacleLabels({
             if (el) store.elements.set(t.id, el);
             else store.elements.delete(t.id);
           }}
-          className="absolute top-0 left-0 flex max-w-48 items-center gap-1.5 rounded-full bg-abyss/70 px-2.5 py-1 text-sm whitespace-nowrap text-foam opacity-0 shadow-lg backdrop-blur transition-opacity"
+          className={`absolute top-0 left-0 flex max-w-48 items-center gap-1.5 rounded-full px-2.5 py-1 text-sm whitespace-nowrap text-foam opacity-0 shadow-lg backdrop-blur transition-opacity ${
+            t.id === selectedId ? "bg-abyss/90 ring-2 ring-brand-pink" : "bg-abyss/70"
+          }`}
         >
           <span className={`size-2 shrink-0 rounded-full ${PRIORITY_DOT[t.priority]}`} />
           <span className="truncate">{t.title}</span>

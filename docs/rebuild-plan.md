@@ -101,6 +101,7 @@ Each phase ends with something you can open and try. Phase 1 comes early on purp
 - Several octopuses: switch between living octopuses (swipe / arrows); a new one spawns when all are full.
 - Data lives in an in-memory store (zustand) behind a repository interface, so Phase 3 only swaps the storage.
 - **Done when:** the whole game loop works in one browser tab.
+- *Built:* the game is at `/play`. Rules are in `game/rules.ts` and are commands that carry their own ids and timestamps, so the server can replay them in Phase 3. The store is `game/store.ts`. For now the repository saves to `localStorage`, so a refresh keeps your octopuses. Swipe between octopuses is left for Phase 4, together with swipe-to-cut; for now you switch with the arrow buttons, the dots or the ← → keys.
 
 ### Phase 3 — Backend + accounts
 - Neon database (dev branch + prod), Drizzle schema and migrations.

@@ -3,14 +3,10 @@
 import { useState, type SubmitEvent } from "react";
 import Link from "next/link";
 import { MAX_TENTACLES, freeSlot, type LabState } from "@/game/lab";
-import type { Priority } from "@/game/types";
+import type { Priority } from "@/game/scene";
+import { PRIORITIES } from "@/components/priority";
 import { SPECIES, SPECIES_LIST, type SpeciesId } from "@/three/octopus/species";
 
-const PRIORITIES: { value: Priority; label: string; dot: string }[] = [
-  { value: 1, label: "Low", dot: "bg-emerald-400" },
-  { value: 2, label: "Medium", dot: "bg-amber-400" },
-  { value: 3, label: "High", dot: "bg-rose-500" },
-];
 
 interface Props {
   state: LabState;

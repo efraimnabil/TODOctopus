@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
-import type { Tentacle as TentacleModel } from "@/game/types";
+import type { Tentacle as TentacleModel } from "@/game/scene";
 import type { LabelStore } from "../labels";
 import {
   attract,
@@ -41,6 +41,8 @@ interface Props {
   /** Shared registry so the arm webbing can read neighbouring arms */
   tubes: Map<number, TubeBuilder>;
   hover: HoverState;
+  /** Picked in the task list */
+  selected?: boolean;
   interactive: boolean;
   onCut: (id: string, cutIndex: number) => void;
   onRetracted: (id: string) => void;
@@ -57,6 +59,7 @@ export function Tentacle({
   labels,
   tubes,
   hover,
+  selected = false,
   interactive,
   onCut,
   onRetracted,
@@ -91,6 +94,7 @@ export function Tentacle({
       acc: 0,
       grow: 0,
       hover: 0,
+      select: 0,
       radiusScale: 0.3,
       activeCount: CHAIN_POINTS,
       stump: false,
@@ -171,6 +175,12 @@ export function Tentacle({
   }, [labels, hovered, canCut, model.id]);
 
   useEffect(() => {
+    if (hovered) hover.onChange?.(model.id);
+    // Only clear if no other arm has taken over the hover meanwhile.
+    else if (!hover.owner) hover.onChange?.(null);
+  }, [hovered, hover, model.id]);
+
+  useEffect(() => {
     if (!hovered) return;
     document.body.style.cursor = "crosshair";
     return () => {
@@ -199,6 +209,7 @@ export function Tentacle({
       onRetracted(model.id);
     }
     s.hover += ((hovered && canCut ? 1 : 0) - s.hover) * damp(8, dt);
+    s.select += ((selected && canCut ? 1 : 0) - s.select) * damp(6, dt);
 
     const sc = octo.scale;
     const ax = rx * arm.anchorRing * sc;
@@ -258,7 +269,9 @@ export function Tentacle({
       }
     }
 
-    material.emissiveIntensity = s.hover * 0.55;
+    // Selected arms breathe a soft glow; hover glows steady and brighter.
+    const pulse = 0.28 + 0.14 * Math.sin(s.time * 4);
+    material.emissiveIntensity = Math.max(s.hover * 0.55, s.select * pulse);
     material.opacity = octo.opacity;
     material.transparent = octo.opacity < 0.999;
 

@@ -35,6 +35,12 @@ importers:
       three:
         specifier: ^0.187.0
         version: 0.187.0
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+      zustand:
+        specifier: ^5.1.0
+        version: 5.1.0(@types/react@19.3.0)(react@19.3.0)(use-sync-external-store@1.7.0(react@19.3.0))
     devDependencies:
       '@tailwindcss/turbopack':
         specifier: 4.3.3

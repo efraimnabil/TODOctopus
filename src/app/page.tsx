@@ -25,12 +25,17 @@ export default function Home() {
         octopus is defeated.
       </p>
       <Link
-        href="/lab"
+        href="/play"
         className="rounded-full bg-brand-gradient px-8 py-3 text-xl text-white transition-transform hover:scale-105 active:scale-95"
       >
-        Enter the Octopus Lab
+        Let&rsquo;s start
       </Link>
-      <p className="text-sm text-foam/50">v2 in progress · Phase 1 prototype</p>
+      <p className="text-sm text-foam/50">
+        v2 in progress ·{" "}
+        <Link href="/lab" className="underline decoration-foam/30 hover:text-foam">
+          Octopus Lab
+        </Link>
+      </p>
     </main>
   );
 }
