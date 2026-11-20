@@ -16,6 +16,8 @@ export interface GameDeps {
   now: () => number;
   random: () => number;
   id: () => string;
+  /** Told what just happened (the app plays sounds from this) */
+  onEvents?: (events: GameEvent[]) => void;
 }
 
 export const browserDeps: GameDeps = {
@@ -84,6 +86,7 @@ export function createGameStore(repo: GameRepository, deps: GameDeps = browserDe
         pending: s.pending + 1,
         ...react(s, result.events),
       }));
+      deps.onEvents?.(result.events);
       repo.commit(command, result.state).then(
         () =>
           set((s) => ({
