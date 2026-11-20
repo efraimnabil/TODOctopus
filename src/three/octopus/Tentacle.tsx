@@ -98,6 +98,7 @@ export function Tentacle({
       grow: 0,
       hover: 0,
       select: 0,
+      angry: 0,
       radiusScale: 0.3,
       activeCount: CHAIN_POINTS,
       stump: false,
@@ -213,6 +214,7 @@ export function Tentacle({
     }
     s.hover += ((hovered && canCut ? 1 : 0) - s.hover) * damp(8, dt);
     s.select += ((selected && canCut ? 1 : 0) - s.select) * damp(6, dt);
+    s.angry += ((model.overdue && canCut ? 1 : 0) - s.angry) * damp(3, dt);
 
     const sc = octo.scale;
     const ax = rx * arm.anchorRing * sc;
@@ -231,8 +233,8 @@ export function Tentacle({
     // the arm away from the cursor.
     pose.pitch = tune.pitch + s.hover * 0.12 + hurt * 0.45 + octo.death * 0.7;
     pose.curl = (s.stump ? 3.6 : tune.curl) + hurt * 1.4 + octo.death * 1.6;
-    pose.waveAmp = tune.wave * (1 + hurt * 1.5) * (1 - 0.7 * s.hover);
-    pose.waveSpeed = 1.4 + hurt * 4;
+    pose.waveAmp = tune.wave * (1 + hurt * 1.5 + s.angry * 1.1) * (1 - 0.7 * s.hover);
+    pose.waveSpeed = 1.4 + hurt * 4 + s.angry * 2.2;
     pose.swayAmp = tune.sway * (1 - 0.7 * s.hover);
     pose.phase = s.phase;
     pose.time = s.time;
@@ -274,7 +276,10 @@ export function Tentacle({
 
     // Selected arms breathe a soft glow; hover glows steady and brighter.
     const pulse = 0.28 + 0.14 * Math.sin(s.time * 4);
-    material.emissiveIntensity = Math.max(s.hover * 0.55, s.select * pulse);
+    // Overdue arms glow an angry, throbbing red.
+    material.emissive.copy(PINK_GLOW).lerp(ANGRY_GLOW, s.angry);
+    const throb = s.angry * (0.65 + 0.3 * Math.sin(s.time * 7));
+    material.emissiveIntensity = Math.max(s.hover * 0.55, s.select * pulse, throb);
     material.opacity = octo.opacity;
     material.transparent = octo.opacity < 0.999;
 
@@ -358,6 +363,9 @@ export function Tentacle({
     </group>
   );
 }
+
+const PINK_GLOW = new THREE.Color("#ff3fbf");
+const ANGRY_GLOW = new THREE.Color("#ff1010");
 
 /** Drag this far (px) from where a press began on an arm to slash it */
 const SWIPE_PX = 28;

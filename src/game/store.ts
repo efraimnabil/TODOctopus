@@ -9,6 +9,7 @@ import {
   type GameCommand,
   type GameEvent,
 } from "./rules";
+import { isOverdue } from "./due";
 import type { Octopus as SceneOctopus, Tentacle as SceneTentacle } from "./scene";
 import type { Account, GameState, Octopus, TaskInput } from "./types";
 
@@ -288,6 +289,7 @@ export function onStage(s: Pick<GameStoreState, "game" | "dying" | "defeatedCard
 export function toScene(
   s: Pick<GameStoreState, "game" | "dying" | "retracting">,
   octopusId: string,
+  now: number = Date.now(),
 ): SceneOctopus | null {
   const octopus = s.game.octopuses.find((o) => o.id === octopusId);
   if (!octopus) return null;
@@ -310,6 +312,7 @@ export function toScene(
       priority: t.priority,
       status,
       cutIndex: t.cutIndex ?? undefined,
+      overdue: isOverdue(t, now),
     });
   }
   return {

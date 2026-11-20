@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { computeStats } from "@/game/rules";
 import { trophies } from "@/game/view";
+import { useNow } from "@/lib/useNow";
 import { GameProvider, useGame } from "./GameProvider";
 
 export default function TrophyRoom() {
@@ -14,17 +15,11 @@ export default function TrophyRoom() {
   );
 }
 
-const subscribeMinute = (cb: () => void) => {
-  const t = window.setInterval(cb, 15_000);
-  return () => window.clearInterval(t);
-};
-const currentMinute = () => Math.floor(Date.now() / 60_000);
-
 function Room() {
   const ready = useGame((s) => s.status === "ready");
   const game = useGame((s) => s.game);
-  const minute = useSyncExternalStore(subscribeMinute, currentMinute, currentMinute);
-  const stats = useMemo(() => computeStats(game, minute * 60_000), [game, minute]);
+  const now = useNow();
+  const stats = useMemo(() => computeStats(game, now), [game, now]);
   const list = useMemo(() => trophies(game), [game]);
 
   return (

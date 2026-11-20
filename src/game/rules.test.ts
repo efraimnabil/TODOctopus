@@ -225,3 +225,27 @@ describe("stats", () => {
     expect(computeStats(finishedOn(0, 0, 0), day(0, 23)).streak).toBe(1);
   });
 });
+
+describe("deadlines and editing", () => {
+  it("stores a due date and lets an edit change just one field", () => {
+    const due = T0 + 86_400_000;
+    let state = apply(emptyGame(), {
+      type: "addTask",
+      taskId: "t-due",
+      input: { title: "File taxes", description: "Form 1040", priority: 2, dueAt: due },
+      at: T0,
+      spawn: { id: "o-due", name: "Octo", seed: 1 },
+    }).state;
+    expect(state.tasks[0]).toMatchObject({ dueAt: due, description: "Form 1040" });
+
+    state = apply(state, { type: "editTask", taskId: "t-due", patch: { priority: 3 } }).state;
+    expect(state.tasks[0]).toMatchObject({ priority: 3, description: "Form 1040", dueAt: due });
+
+    state = apply(state, { type: "editTask", taskId: "t-due", patch: { dueAt: null } }).state;
+    expect(state.tasks[0].dueAt).toBeNull();
+  });
+
+  it("defaults to no deadline", () => {
+    expect(add(emptyGame(), "plain").state.tasks[0].dueAt).toBeNull();
+  });
+});

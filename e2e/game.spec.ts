@@ -87,6 +87,25 @@ test("tasks can be sorted and filtered by priority", async ({ page }) => {
   await expect(taskRow(page, "Urgent thing")).toBeVisible();
 });
 
+test("a task with a past deadline is marked overdue and can be re-dated", async ({ page }) => {
+  await openGame(page);
+  await page.getByLabel("Due date").fill("2020-01-02");
+  await addTask(page, "Ancient errand");
+  const row = taskRow(page, "Ancient errand");
+  await expect(row).toContainText("Overdue");
+  await saved(page);
+
+  await page.reload();
+  await expect(taskRow(page, "Ancient errand")).toContainText("Overdue");
+
+  await row.getByRole("button", { name: /Ancient errand/ }).click();
+  await row.getByRole("button", { name: "Edit" }).click();
+  await row.getByLabel("Due date").fill("2999-01-01");
+  await row.getByRole("button", { name: "Save" }).click();
+  await expect(taskRow(page, "Ancient errand")).not.toContainText("Overdue");
+  await expect(taskRow(page, "Ancient errand")).toContainText("Due ");
+});
+
 test("the landing page, About and a missing page all render", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("tentacle");

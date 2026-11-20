@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState, type SubmitEvent } from "react";
 import { DESCRIPTION_MAX, TITLE_MAX } from "@/game/rules";
 import type { Priority, Task } from "@/game/types";
+import { dueLabel } from "@/game/due";
+import { useNow } from "@/lib/useNow";
 import { PRIORITY_DOT } from "../priority";
+import { DueField } from "./DueField";
 import { useGame } from "./GameProvider";
 import { PriorityPicker } from "./PriorityPicker";
 
@@ -16,6 +19,8 @@ export function TaskRow({ task, canAct }: { task: Task; canAct: boolean }) {
   const removeTask = useGame((s) => s.removeTask);
   const [editing, setEditing] = useState(false);
   const row = useRef<HTMLLIElement>(null);
+  const now = useNow();
+  const due = task.dueAt !== null ? dueLabel(task.dueAt, now) : null;
 
   // Pointing at a tentacle brings its task into view.
   useEffect(() => {
@@ -40,6 +45,19 @@ export function TaskRow({ task, canAct }: { task: Task; canAct: boolean }) {
         >
           <span className={`size-2 shrink-0 rounded-full ${PRIORITY_DOT[task.priority]}`} />
           <span className="truncate">{task.title}</span>
+          {due && (
+            <span
+              className={`shrink-0 rounded-full px-1.5 py-px text-[0.65rem] ${
+                due.tone === "overdue"
+                  ? "bg-red-500/25 text-red-200"
+                  : due.tone === "soon"
+                    ? "bg-amber-400/20 text-amber-100"
+                    : "bg-white/10 text-foam/70"
+              }`}
+            >
+              {due.text}
+            </span>
+          )}
           {task.description && !selected && (
             <span className="shrink-0 text-xs text-foam/60" aria-label="Has notes">
               ¶
@@ -95,10 +113,11 @@ function EditTask({ task, onDone }: { task: Task; onDone: () => void }) {
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description);
   const [priority, setPriority] = useState<Priority>(task.priority);
+  const [dueAt, setDueAt] = useState<number | null>(task.dueAt);
 
   const submit = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (editTask(task.id, { title, description, priority })) onDone();
+    if (editTask(task.id, { title, description, priority, dueAt })) onDone();
   };
 
   return (
@@ -130,6 +149,7 @@ function EditTask({ task, onDone }: { task: Task; onDone: () => void }) {
         className="w-full resize-none rounded-xl border border-white/15 bg-abyss/50 px-3 py-1.5 text-sm text-foam placeholder-foam/35 outline-none focus:ring-2 focus:ring-brand-pink/60"
       />
       <PriorityPicker value={priority} onChange={setPriority} />
+      <DueField value={dueAt} onChange={setDueAt} />
       <div className="flex justify-end gap-2 text-xs">
         <button
           type="button"

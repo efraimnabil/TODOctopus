@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useFocusTrap } from "@/lib/useFocusTrap";
+import { useNow } from "@/lib/useNow";
 import { computeStats, livingOctopuses, tentaclesOf } from "@/game/rules";
 import type { Octopus } from "@/game/types";
 import GameScene from "@/three/GameScene";
@@ -110,8 +111,8 @@ function LiveAnnouncer() {
 
 function Header() {
   const game = useGame((s) => s.game);
-  const minute = useSyncExternalStore(subscribeMinute, currentMinute, currentMinute);
-  const stats = useMemo(() => computeStats(game, minute * 60_000), [game, minute]);
+  const now = useNow();
+  const stats = useMemo(() => computeStats(game, now), [game, now]);
   return (
     <header className="pointer-events-none absolute top-0 left-0 p-4 md:p-6">
       <Link
@@ -130,13 +131,6 @@ function Header() {
     </header>
   );
 }
-
-/** A clock that ticks once a minute (the streak depends on what day it is). */
-const subscribeMinute = (cb: () => void) => {
-  const t = window.setInterval(cb, 15_000);
-  return () => window.clearInterval(t);
-};
-const currentMinute = () => Math.floor(Date.now() / 60_000);
 
 function EmptySea() {
   const empty = useGame((s) => s.activeId === null);

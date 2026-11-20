@@ -3,6 +3,7 @@
 import { useRef, useState, type SubmitEvent } from "react";
 import { TITLE_MAX, nextHome } from "@/game/rules";
 import type { Priority } from "@/game/types";
+import { DueField } from "./DueField";
 import { PriorityPicker } from "./PriorityPicker";
 import { useGame } from "./GameProvider";
 
@@ -11,12 +12,16 @@ export function AddTaskForm() {
   const home = useGame((s) => nextHome(s.game));
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<Priority>(2);
+  const [dueAt, setDueAt] = useState<number | null>(null);
   const input = useRef<HTMLInputElement>(null);
 
   const submit = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!title.trim()) return;
-    if (addTask({ title, priority })) setTitle("");
+    if (addTask({ title, priority, dueAt })) {
+      setTitle("");
+      setDueAt(null);
+    }
     input.current?.focus();
   };
 
@@ -43,6 +48,7 @@ export function AddTaskForm() {
           Grow
         </button>
       </div>
+      <DueField value={dueAt} onChange={setDueAt} />
       <p className="px-1 text-xs text-foam/60" aria-live="polite">
         {home ? (
           <>

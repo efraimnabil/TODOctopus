@@ -15,13 +15,27 @@ export const DESCRIPTION_MAX = 500;
 
 export const priorities = [1, 2, 3] as const satisfies readonly Priority[];
 
+const titleField = z.string().trim().min(1, "Give the task a name").max(TITLE_MAX);
+const descriptionField = z.string().trim().max(DESCRIPTION_MAX);
+const priorityField = z.union([z.literal(1), z.literal(2), z.literal(3)]);
+const dueField = z.number().int().nonnegative().nullable();
+
 export const taskInputSchema = z.object({
-  title: z.string().trim().min(1, "Give the task a name").max(TITLE_MAX),
-  description: z.string().trim().max(DESCRIPTION_MAX).default(""),
-  priority: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+  title: titleField,
+  description: descriptionField.default(""),
+  priority: priorityField,
+  dueAt: dueField.default(null),
 });
 
-export const taskPatchSchema = taskInputSchema.partial();
+/** Only what was sent changes (no defaults: they would overwrite the task). */
+export const taskPatchSchema = z
+  .object({
+    title: titleField,
+    description: descriptionField,
+    priority: priorityField,
+    dueAt: dueField,
+  })
+  .partial();
 
 export const OCTOPUS_NAMES = [
   "Inky Malone",
@@ -188,6 +202,7 @@ function addTask(
     title: input.title,
     description: input.description,
     priority: input.priority,
+    dueAt: input.dueAt,
     status: "open",
     createdAt: command.at,
     completedAt: null,

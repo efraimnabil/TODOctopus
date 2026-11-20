@@ -20,6 +20,7 @@ const task = (
   createdAt,
   completedAt,
   cutIndex: null,
+  dueAt: null,
 });
 
 const octopus = (id: string, status: Octopus["status"], defeatedAt: number | null): Octopus => ({
@@ -40,6 +41,14 @@ describe("sortTasks", () => {
   it("sorts by age", () => {
     expect(sortTasks(sample, "newest").map((t) => t.id)).toEqual(["d", "b", "c", "a"]);
     expect(sortTasks(sample, "oldest").map((t) => t.id)).toEqual(["a", "c", "b", "d"]);
+  });
+  it("puts the soonest deadline first, tasks without one last", () => {
+    const list = [
+      { ...task("none", 3, 1), dueAt: null },
+      { ...task("late", 1, 2), dueAt: 500 },
+      { ...task("soon", 1, 3), dueAt: 100 },
+    ];
+    expect(sortTasks(list, "due").map((t) => t.id)).toEqual(["soon", "late", "none"]);
   });
   it("does not mutate its input", () => {
     const copy = [...sample];
