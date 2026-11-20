@@ -165,7 +165,7 @@ export function TaskPanel({ footer }: { footer: ReactNode }) {
         )}
       </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto border-t border-white/10 px-4 py-2 text-xs whitespace-nowrap">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-white/10 px-4 py-2 text-xs whitespace-nowrap">
         {footer}
       </div>
     </aside>
