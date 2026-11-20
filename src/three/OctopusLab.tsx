@@ -88,7 +88,9 @@ export default function OctopusLab() {
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-abyss">
       <Canvas
-        dpr={quality === "high" ? [1, 2] : 1}
+        // Fixed for the whole session: changing dpr at runtime can race a
+        // resize and leave the renderer and canvas at different sizes.
+        dpr={[1, 2]}
         camera={{ position: [0, 2.8, 8.2], fov: 38 }}
         gl={{ antialias: quality === "high" }}
       >
@@ -111,7 +113,6 @@ export default function OctopusLab() {
           </ShakeGroup>
           <OrbitControls
             makeDefault
-            target={[0, 1.2, 0]}
             enablePan={false}
             enableDamping
             minDistance={3.5}

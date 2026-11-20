@@ -2,31 +2,34 @@ import { useEffect } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
-const TARGET = new THREE.Vector3(0, 1.2, 0);
+const OCTOPUS_CENTER_Y = 1.2;
 const DIRECTION = new THREE.Vector3(0, 0.2, 1).normalize();
 
+type Controls = { target: THREE.Vector3; update: () => void };
+
 /**
- * Back the camera off on narrow screens so the octopus fits, and on portrait
- * screens shift the view so it sits above the bottom task sheet.
+ * Frames the octopus for the current screen shape by moving the camera and
+ * orbit target only. (No setViewOffset: it bakes the old screen size into the
+ * projection and left half the canvas black after a resize.)
+ * Narrow screens: back off. Portrait: aim below the octopus so it sits above
+ * the bottom task sheet.
  */
 export function FitCamera() {
-  const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
+  const camera = useThree((s) => s.camera);
+  const controls = useThree((s) => s.controls) as unknown as Controls | null;
   const width = useThree((s) => s.size.width);
   const height = useThree((s) => s.size.height);
-  const controls = useThree((s) => s.controls) as { update?: () => void } | null;
 
   useEffect(() => {
     const aspect = width / Math.max(1, height);
     const distance = aspect >= 1.4 ? 8.2 : aspect >= 1 ? 9.4 : aspect >= 0.7 ? 11 : 12.5;
-    camera.position.copy(TARGET).addScaledVector(DIRECTION, distance);
-    camera.lookAt(TARGET);
-    if (aspect < 0.9) {
-      camera.setViewOffset(width, height, 0, height * 0.2, width, height);
-    } else {
-      camera.clearViewOffset();
+    const target = new THREE.Vector3(0, OCTOPUS_CENTER_Y - (aspect < 0.9 ? 1.5 : 0), 0);
+    camera.position.copy(target).addScaledVector(DIRECTION, distance);
+    camera.lookAt(target);
+    if (controls) {
+      controls.target.copy(target);
+      controls.update();
     }
-    camera.updateProjectionMatrix();
-    controls?.update?.();
   }, [camera, controls, width, height]);
 
   return null;
