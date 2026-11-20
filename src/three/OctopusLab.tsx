@@ -153,7 +153,8 @@ export default function OctopusLab() {
         // resize and leave the renderer and canvas at different sizes.
         dpr={[1, 2]}
         camera={{ position: [0, 2.8, 8.2], fov: 38 }}
-        gl={{ antialias: quality === "high" }}
+        // Opaque canvas: nothing in the scene should ever show the page through.
+        gl={{ antialias: quality === "high", alpha: false }}
       >
         <Suspense fallback={null}>
           <PerformanceMonitor onDecline={() => setQuality("low")} />

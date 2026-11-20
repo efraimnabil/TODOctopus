@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { Environment, Lightformer, Sparkles } from "@react-three/drei";
 import * as THREE from "three";
 import { SimplexNoise } from "three/examples/jsm/math/SimplexNoise.js";
@@ -17,8 +17,7 @@ export function Underwater({
 }) {
   return (
     <>
-      <color attach="background" args={[ABYSS]} />
-      <fogExp2 attach="fog" args={[ABYSS, fogDensity]} />
+      <Atmosphere fogDensity={fogDensity} />
 
       <hemisphereLight args={["#8ad8ff", "#2a0f33", 0.9]} />
       <directionalLight position={[3, 9, 4]} intensity={2.2} color="#dff6ff" />
@@ -49,6 +48,27 @@ export function Underwater({
       />
     </>
   );
+}
+
+/**
+ * Background color + fog, set on the scene itself. (Declarative
+ * `attach="background"` binds to the parent object, and this component sits
+ * inside a <group>, so the scene used to get neither: the sky was transparent
+ * and anything drawn over it, like the light shafts, showed up as black.)
+ */
+function Atmosphere({ fogDensity }: { fogDensity: number }) {
+  const scene = useThree((s) => s.scene);
+  useEffect(() => {
+    const background = new THREE.Color(ABYSS);
+    const fog = new THREE.FogExp2(ABYSS, fogDensity);
+    scene.background = background;
+    scene.fog = fog;
+    return () => {
+      if (scene.background === background) scene.background = null;
+      if (scene.fog === fog) scene.fog = null;
+    };
+  }, [scene, fogDensity]);
+  return null;
 }
 
 function Seabed() {
@@ -114,7 +134,7 @@ const causticsFragment = /* glsl */ `
     float t = uTime * 0.6;
     float c1 = 1.0 - smoothstep(0.0, 0.09, cells(p + vec2(t * 0.1, 0.0), t));
     float c2 = 1.0 - smoothstep(0.0, 0.12, cells(p * 1.35 + vec2(-t * 0.07, t * 0.05) + 3.1, t * 1.2));
-    float c = pow(c1 * 0.6 + c2 * 0.45, 2.0);
+    float c = pow(max(c1 * 0.6 + c2 * 0.45, 0.0), 2.0);
     // Patchy brightness so the web doesn't read as a uniform net.
     float patches = 0.35 + 0.65 * (0.5 + 0.5 * sin(vWorld.x * 0.45 + t) * sin(vWorld.z * 0.38 - t * 0.8));
     float fade = 1.0 - smoothstep(4.0, 18.0, length(vWorld.xz * vec2(0.6, 1.0)));
@@ -151,10 +171,14 @@ const rayFragment = /* glsl */ `
   uniform float uSeed;
   varying vec2 vUv;
   void main() {
-    float x = abs(vUv.x - 0.5) * 2.0;
+    // pow() of a negative number is NaN on many GPUs, and float rounding at
+    // the plane edges can push these inputs just below 0. NaN pixels render
+    // black and bloom smears them across the screen, so clamp every input.
+    float x = clamp(abs(vUv.x - 0.5) * 2.0, 0.0, 1.0);
+    float y = clamp(vUv.y, 0.0, 1.0);
     float beam = pow(1.0 - x, 3.0);
-    float grad = pow(vUv.y, 1.4) * smoothstep(0.0, 0.25, vUv.y);
-    float flicker = 0.65 + 0.35 * sin(uTime * 0.7 + uSeed * 6.0 + vUv.y * 3.0);
+    float grad = pow(y, 1.4) * smoothstep(0.0, 0.25, y);
+    float flicker = 0.65 + 0.35 * sin(uTime * 0.7 + uSeed * 6.0 + y * 3.0);
     gl_FragColor = vec4(vec3(0.6, 0.9, 1.0) * beam * grad * flicker * 0.16, 1.0);
   }
 `;
