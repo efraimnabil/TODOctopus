@@ -14,7 +14,14 @@ type Controls = { target: THREE.Vector3; update: () => void };
  * Narrow screens: back off. Portrait: aim below the octopus so it sits above
  * the bottom task sheet.
  */
-export function FitCamera() {
+export function FitCamera({
+  distanceScale = 1,
+  lineup = false,
+}: {
+  distanceScale?: number;
+  /** Wide shot that fits the four-octopus comparison row */
+  lineup?: boolean;
+}) {
   const camera = useThree((s) => s.camera);
   const controls = useThree((s) => s.controls) as unknown as Controls | null;
   const width = useThree((s) => s.size.width);
@@ -22,15 +29,19 @@ export function FitCamera() {
 
   useEffect(() => {
     const aspect = width / Math.max(1, height);
-    const distance = aspect >= 1.4 ? 8.2 : aspect >= 1 ? 9.4 : aspect >= 0.7 ? 11 : 12.5;
-    const target = new THREE.Vector3(0, OCTOPUS_CENTER_Y - (aspect < 0.9 ? 1.5 : 0), 0);
+    const base = lineup
+      ? aspect >= 1.4 ? 21 : aspect >= 1 ? 30 : 46
+      : aspect >= 1.4 ? 8.2 : aspect >= 1 ? 9.4 : aspect >= 0.7 ? 11 : 12.5;
+    const distance = base * distanceScale;
+    const drop = aspect < 0.9 ? (lineup ? 4 : 1.5) * distanceScale : 0;
+    const target = new THREE.Vector3(0, OCTOPUS_CENTER_Y - drop, 0);
     camera.position.copy(target).addScaledVector(DIRECTION, distance);
     camera.lookAt(target);
     if (controls) {
       controls.target.copy(target);
       controls.update();
     }
-  }, [camera, controls, width, height]);
+  }, [camera, controls, width, height, distanceScale, lineup]);
 
   return null;
 }

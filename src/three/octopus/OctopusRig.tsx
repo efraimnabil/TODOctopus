@@ -4,7 +4,7 @@ import * as THREE from "three";
 import type { Octopus } from "@/game/types";
 import type { FxBus } from "../fx/FxBus";
 import { useLazyRef } from "../useLazyRef";
-import { MANTLE_Y, createPalette, damp } from "./constants";
+import { createPalette, damp } from "./constants";
 import { Eyes } from "./Eyes";
 import {
   createMantleGeometry,
@@ -13,13 +13,17 @@ import {
 } from "./materials";
 import type { LabelStore } from "../labels";
 import type { OctoState, TuningRef } from "./shared";
+import type { Species } from "./species";
 import { Tentacle } from "./Tentacle";
 
 interface Props {
   model: Octopus;
+  species: Species;
   fx: FxBus;
   tuning: TuningRef;
   labels: LabelStore | null;
+  /** False for display-only octopuses (comparison lineup) */
+  interactive?: boolean;
   onCut: (id: string, cutIndex: number) => void;
   onRetracted: (id: string) => void;
   onDead: () => void;
@@ -29,9 +33,11 @@ const DEATH_DURATION = 3.1;
 
 export function OctopusRig({
   model,
+  species,
   fx,
   tuning,
   labels,
+  interactive = true,
   onCut,
   onRetracted,
   onDead,
@@ -47,17 +53,18 @@ export function OctopusRig({
   const mantle = useRef<THREE.Mesh>(null);
   const shadow = useRef<THREE.Mesh>(null);
 
-  const palette = useMemo(() => createPalette(model.seed), [model.seed]);
+  const palette = useMemo(() => createPalette(model.seed, species), [model.seed, species]);
+  const mantleY = species.mantle.centerY;
   const parts = useMemo(() => {
-    const skin = createSkinMaterial();
-    const lid = createSkinMaterial(false, palette.skin);
+    const skin = createSkinMaterial(palette);
+    const lid = createSkinMaterial(palette, false, palette.skin);
     const white = new THREE.MeshPhysicalMaterial({
       color: "#fff6ee",
       roughness: 0.12,
       clearcoat: 1,
     });
     const iris = new THREE.MeshPhysicalMaterial({
-      color: "#ffb020",
+      color: species.eyes.iris,
       roughness: 0.3,
       clearcoat: 1,
       emissive: new THREE.Color("#ff7a00"),
@@ -76,7 +83,7 @@ export function OctopusRig({
       color: "#000000",
     });
     return {
-      mantleGeo: createMantleGeometry(model.seed, palette),
+      mantleGeo: createMantleGeometry(model.seed, species, palette),
       skin,
       lid,
       white,
@@ -86,7 +93,7 @@ export function OctopusRig({
       shadowMat,
       fading: [skin, lid, white, iris, pupil, sucker],
     };
-  }, [model.seed, palette]);
+  }, [model.seed, palette, species]);
 
   useEffect(
     () => () => {
@@ -104,7 +111,7 @@ export function OctopusRig({
     if (!dying) return;
     fx.emit("ink", {
       id: fx.id(),
-      position: [0, MANTLE_Y - 0.4, 0.2],
+      position: [0, mantleY - species.mantle.radius * 0.5, 0.2],
       scale: 2.4,
     });
     fx.hit(1);
@@ -115,7 +122,7 @@ export function OctopusRig({
       onDead();
     }, 6000);
     return () => window.clearTimeout(timer);
-  }, [dying, fx, onDead]);
+  }, [dying, fx, onDead, mantleY, species.mantle.radius]);
 
   useFrame((_, delta) => {
     const o = octo.current;
@@ -145,7 +152,7 @@ export function OctopusRig({
     const hurt = fx.hurt;
     const breath = Math.sin(m.t * 1.7);
     if (head.current) {
-      head.current.position.set(0, o.offsetY + MANTLE_Y * o.scale, 0);
+      head.current.position.set(0, o.offsetY + mantleY * o.scale, 0);
       head.current.scale.setScalar(o.scale);
       head.current.rotation.z =
         Math.sin(m.t * 0.9) * 0.04 + hurt * Math.sin(m.t * 38) * 0.05;
@@ -165,7 +172,7 @@ export function OctopusRig({
     }
     if (shadow.current) {
       const fade = o.opacity * Math.max(0, 1 - rise * 0.6);
-      shadow.current.scale.setScalar(o.scale * (1 + breath * 0.02));
+      shadow.current.scale.setScalar(o.scale * species.footprint * (1 + breath * 0.02));
       (shadow.current.material as THREE.MeshBasicMaterial).opacity = 0.6 * fade;
     }
     parts.skin.emissiveIntensity +=
@@ -177,12 +184,17 @@ export function OctopusRig({
       <group ref={head}>
         <mesh ref={mantle} geometry={parts.mantleGeo} material={parts.skin} />
         {/* Soft "skirt" where the arms join the body */}
-        <mesh position={[0, -0.6, 0]} scale={[0.62, 0.3, 0.62]} material={parts.lid}>
+        <mesh
+          position={[0, species.skirt.y, 0]}
+          scale={[species.skirt.radius, species.skirt.height, species.skirt.radius]}
+          material={parts.lid}
+        >
           <sphereGeometry args={[1, 40, 20]} />
         </mesh>
         <Eyes
           octo={octo.current}
           fx={fx}
+          shape={species.eyes}
           lidMaterial={parts.lid}
           whiteMaterial={parts.white}
           irisMaterial={parts.iris}
@@ -202,6 +214,8 @@ export function OctopusRig({
         <Tentacle
           key={t.id}
           model={t}
+          species={species}
+          interactive={interactive}
           octo={octo.current}
           palette={palette}
           suckerMaterial={parts.sucker}

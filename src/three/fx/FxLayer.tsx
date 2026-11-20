@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { useFrame } from "@react-three/fiber";
 import type * as THREE from "three";
 import type { Palette } from "../octopus/constants";
+import type { Species } from "../octopus/species";
 import type { FxBus, InkSpawn, SeveredSpawn, SlashSpawn } from "./FxBus";
 import { InkBurst } from "./InkBurst";
 import { SeveredPiece } from "./SeveredPiece";
@@ -37,7 +38,15 @@ export function ShakeGroup({ fx, children }: { fx: FxBus; children: ReactNode })
   return <group ref={group}>{children}</group>;
 }
 
-export function FxLayer({ fx, palette }: { fx: FxBus; palette: Palette }) {
+export function FxLayer({
+  fx,
+  palette,
+  species,
+}: {
+  fx: FxBus;
+  palette: Palette;
+  species: Species;
+}) {
   const [severed, removeSevered] = useSpawnList<SeveredSpawn>(
     useCallback((add) => fx.on("severed", add), [fx]),
   );
@@ -50,7 +59,14 @@ export function FxLayer({ fx, palette }: { fx: FxBus; palette: Palette }) {
   return (
     <>
       {severed.map((s) => (
-        <SeveredPiece key={s.id} spawn={s} palette={palette} fx={fx} onDone={removeSevered} />
+        <SeveredPiece
+          key={s.id}
+          spawn={s}
+          palette={palette}
+          species={species}
+          fx={fx}
+          onDone={removeSevered}
+        />
       ))}
       {ink.map((s) => (
         <InkBurst key={s.id} spawn={s} fx={fx} onDone={removeInk} />

@@ -2,17 +2,22 @@ import * as THREE from "three";
 import { SimplexNoise } from "three/examples/jsm/math/SimplexNoise.js";
 import { mulberry32 } from "@/lib/random";
 import { smoothstep, type Palette } from "./constants";
+import type { Species } from "./species";
 
 /** Wet, soft skin: clearcoat for the shine, sheen for the velvet rim. */
-export function createSkinMaterial(vertexColors = true, color?: THREE.Color) {
+export function createSkinMaterial(
+  palette: Palette,
+  vertexColors = true,
+  color?: THREE.Color,
+) {
   return new THREE.MeshPhysicalMaterial({
     vertexColors,
     color: color ?? 0xffffff,
-    roughness: 0.42,
-    clearcoat: 0.9,
-    clearcoatRoughness: 0.22,
-    sheen: 0.8,
-    sheenColor: new THREE.Color("#ff7ad9"),
+    roughness: 0.45,
+    clearcoat: 0.85,
+    clearcoatRoughness: 0.25,
+    sheen: 0.7,
+    sheenColor: palette.sheen,
     sheenRoughness: 0.45,
     emissive: new THREE.Color("#ff3fbf"),
     emissiveIntensity: 0,
@@ -28,9 +33,37 @@ export function createSuckerMaterial(palette: Palette) {
   });
 }
 
-/** Bumpy, leaning-back mantle with darker spots on top. */
-export function createMantleGeometry(seed: number, palette: Palette) {
-  const geo = new THREE.SphereGeometry(0.85, 72, 56);
+/**
+ * Arm skin color at arc position t (0 base → 1 tip) and ring angle
+ * (π/2 = underside). Shared by attached arms and severed pieces.
+ */
+export function armColor(
+  palette: Palette,
+  species: Species,
+  t: number,
+  angle: number,
+  out: THREE.Color,
+) {
+  const { pattern } = species;
+  out.copy(palette.skin).lerp(palette.tip, smoothstep(0.1, 1, t));
+  const under = Math.sin(angle);
+  const top = Math.max(0, -under);
+  if (pattern.mottle > 0) {
+    const m = 0.5 + 0.5 * Math.sin(t * 31 + angle * 2.3) * Math.sin(t * 11 - angle * 1.7);
+    out.lerp(palette.spot, pattern.mottle * m * m * (0.4 + 0.6 * top));
+  }
+  if (pattern.rings && top > 0.2) {
+    const band = (t * pattern.rings.count) % 1;
+    if (band > 0.38 && band < 0.56 && t < 0.9) out.lerp(palette.ring, 0.85);
+  }
+  if (under > 0) out.lerp(palette.underside, under * under * 0.55);
+}
+
+/** Bumpy, leaning-back mantle with species spots / rings. */
+export function createMantleGeometry(seed: number, species: Species, palette: Palette) {
+  const { mantle, pattern } = species;
+  const r = mantle.radius;
+  const geo = new THREE.SphereGeometry(r, 72, 56);
   const noise = new SimplexNoise({ random: mulberry32(seed * 31 + 7) });
   const pos = geo.attributes.position;
   const colors = new Float32Array(pos.count * 3);
@@ -40,21 +73,35 @@ export function createMantleGeometry(seed: number, palette: Palette) {
     let y = pos.getY(i);
     let z = pos.getZ(i);
     if (y > 0) {
-      y *= 1.35;
-      z -= 0.3 * y * y;
+      y *= mantle.stretch;
+      z -= mantle.lean * y * y;
     } else {
-      y *= 0.85;
+      y *= mantle.bottom;
     }
-    const bump = 1 + 0.035 * noise.noise3d(x * 2.2, y * 2.2, z * 2.2);
+    const f = mantle.bumpFreq / r;
+    const bump =
+      1 +
+      mantle.bumps * noise.noise3d(x * f, y * f, z * f) +
+      mantle.bumps * 0.4 * noise.noise3d(x * f * 2.7, y * f * 2.7, z * f * 2.7);
     x *= bump;
     y *= bump;
     z *= bump;
     pos.setXYZ(i, x, y, z);
 
-    col.copy(palette.skin).lerp(palette.mantleTop, smoothstep(-0.5, 1.1, y));
-    const spots = noise.noise3d(x * 4.5 + 10, y * 4.5, z * 4.5);
-    if (spots > 0.35 && y > -0.2) col.lerp(palette.spot, Math.min(0.65, (spots - 0.35) * 3));
-    if (y < -0.35) col.lerp(palette.underside, smoothstep(-0.35, -0.75, y) * 0.45);
+    const h = y / r; // height in mantle radii
+    col.copy(palette.skin).lerp(palette.mantleTop, smoothstep(-0.5, 1.2, h));
+    const s = pattern.spotScale / r;
+    const spots = noise.noise3d(x * s + 10, y * s, z * s);
+    const th = pattern.spotThreshold;
+    if (h > -0.3) {
+      if (pattern.rings) {
+        if (spots > th && spots < th + 0.13) col.lerp(palette.ring, 0.9);
+        else if (spots >= th + 0.13) col.lerp(palette.spot, pattern.spotStrength);
+      } else if (spots > th) {
+        col.lerp(palette.spot, Math.min(pattern.spotStrength, (spots - th) * 3));
+      }
+    }
+    if (h < -0.4) col.lerp(palette.underside, smoothstep(-0.4, -0.85, h) * 0.45);
     colors[i * 3] = col.r;
     colors[i * 3 + 1] = col.g;
     colors[i * 3 + 2] = col.b;

@@ -4,6 +4,7 @@ import { useState, type SubmitEvent } from "react";
 import Link from "next/link";
 import { MAX_TENTACLES, freeSlot, type LabState } from "@/game/lab";
 import type { Priority } from "@/game/types";
+import { SPECIES, SPECIES_LIST, type SpeciesId } from "@/three/octopus/species";
 
 const PRIORITIES: { value: Priority; label: string; dot: string }[] = [
   { value: 1, label: "Low", dot: "bg-emerald-400" },
@@ -13,6 +14,10 @@ const PRIORITIES: { value: Priority; label: string; dot: string }[] = [
 
 interface Props {
   state: LabState;
+  view: "single" | "lineup";
+  speciesId: SpeciesId;
+  onPickSpecies: (id: SpeciesId) => void;
+  onCompare: () => void;
   quality: "high" | "low";
   showLabels: boolean;
   onAdd: (title: string, priority: Priority) => void;
@@ -26,6 +31,10 @@ interface Props {
 
 export function LabPanel({
   state,
+  view,
+  speciesId,
+  onPickSpecies,
+  onCompare,
   quality,
   showLabels,
   onAdd,
@@ -51,6 +60,54 @@ export function LabPanel({
     setTitle("");
   };
 
+  const header = (
+    <header className="pointer-events-none absolute top-0 left-0 p-4 md:p-6">
+      <Link
+        href="/"
+        className="pointer-events-auto font-display text-2xl tracking-widest text-brand-gradient md:text-3xl"
+      >
+        TODOctopus
+      </Link>
+      <p className="text-xs tracking-[0.3em] text-foam/50 uppercase">
+        Octopus Lab · {kills} defeated
+      </p>
+    </header>
+  );
+
+  if (view === "lineup") {
+    return (
+      <>
+        {header}
+        <div className="glass absolute right-3 bottom-3 left-3 rounded-3xl p-4 md:right-auto md:left-1/2 md:w-[44rem] md:-translate-x-1/2">
+          <h2 className="text-lg">Pick a body shape</h2>
+          <p className="text-sm text-foam/60">
+            Tap a name above an octopus, or choose here. You can switch any time.
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
+            {SPECIES_LIST.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => onPickSpecies(s.id)}
+                className={`rounded-2xl p-3 text-left transition hover:bg-white/10 ${
+                  s.id === speciesId ? "bg-white/10 ring-1 ring-brand-pink/70" : "bg-white/5"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <span
+                    className="size-3 shrink-0 rounded-full"
+                    style={{ background: `linear-gradient(135deg, ${s.colors.skin}, ${s.colors.tip})` }}
+                  />
+                  <span className="text-sm text-foam">{s.name}</span>
+                </span>
+                <span className="mt-1 block text-xs leading-snug text-foam/55">{s.blurb}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <header className="pointer-events-none absolute top-0 left-0 p-4 md:p-6">
@@ -71,6 +128,31 @@ export function LabPanel({
           <span className="shrink-0 text-sm text-foam/60">
             {remaining} left · {octopus.tentacles.length}/{MAX_TENTACLES}
           </span>
+        </div>
+
+        <div className="mt-2 flex items-center gap-2 text-xs">
+          <label htmlFor="species" className="text-foam/50">
+            Body
+          </label>
+          <select
+            id="species"
+            value={speciesId}
+            onChange={(e) => onPickSpecies(e.target.value as SpeciesId)}
+            className="min-w-0 flex-1 rounded-full border border-white/15 bg-abyss/60 px-2 py-1 text-foam outline-none"
+          >
+            {SPECIES_LIST.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={onCompare}
+            className="rounded-full px-2 py-1 text-foam/60 hover:bg-white/10 hover:text-foam"
+            title={`Compare all body shapes (current: ${SPECIES[speciesId].name})`}
+          >
+            Compare all
+          </button>
         </div>
 
         <form onSubmit={submit} className="mt-3 space-y-2">

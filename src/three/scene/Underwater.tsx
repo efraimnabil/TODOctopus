@@ -8,11 +8,17 @@ import { mulberry32 } from "@/lib/random";
 const ABYSS = "#031a2c";
 
 /** Lights, fog, sand, caustics, light shafts, plankton, bubbles and rocks. */
-export function Underwater({ quality }: { quality: "high" | "low" }) {
+export function Underwater({
+  quality,
+  fogDensity = 0.055,
+}: {
+  quality: "high" | "low";
+  fogDensity?: number;
+}) {
   return (
     <>
       <color attach="background" args={[ABYSS]} />
-      <fogExp2 attach="fog" args={[ABYSS, 0.055]} />
+      <fogExp2 attach="fog" args={[ABYSS, fogDensity]} />
 
       <hemisphereLight args={["#8ad8ff", "#2a0f33", 0.9]} />
       <directionalLight position={[3, 9, 4]} intensity={2.2} color="#dff6ff" />
@@ -55,7 +61,8 @@ function Seabed() {
       const x = pos.getX(i);
       const z = pos.getZ(i);
       // Flat where the octopus sits, dunes further out.
-      const flat = THREE.MathUtils.smoothstep(Math.hypot(x, z), 3.5, 11);
+      // (wide enough for the four-octopus comparison row)
+      const flat = THREE.MathUtils.smoothstep(Math.hypot(x * 0.55, z), 4, 12);
       const dunes = noise.noise(x * 0.12, z * 0.12) * 0.9 + noise.noise(x * 0.5, z * 0.5) * 0.12;
       pos.setY(i, dunes * flat);
     }
@@ -110,7 +117,7 @@ const causticsFragment = /* glsl */ `
     float c = pow(c1 * 0.6 + c2 * 0.45, 2.0);
     // Patchy brightness so the web doesn't read as a uniform net.
     float patches = 0.35 + 0.65 * (0.5 + 0.5 * sin(vWorld.x * 0.45 + t) * sin(vWorld.z * 0.38 - t * 0.8));
-    float fade = 1.0 - smoothstep(2.5, 10.0, length(vWorld.xz));
+    float fade = 1.0 - smoothstep(4.0, 18.0, length(vWorld.xz * vec2(0.6, 1.0)));
     gl_FragColor = vec4(vec3(0.55, 0.95, 1.0) * c * patches * 0.32 * fade, 1.0);
   }
 `;
@@ -134,7 +141,7 @@ function Caustics() {
   });
   return (
     <mesh rotation-x={-Math.PI / 2} position={[0, 0.006, 0]} material={material} raycast={() => null}>
-      <planeGeometry args={[24, 24]} />
+      <planeGeometry args={[44, 30]} />
     </mesh>
   );
 }

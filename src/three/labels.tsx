@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { Tentacle } from "@/game/types";
@@ -70,6 +71,43 @@ export function TentacleLabels({
           <span className={`size-2 shrink-0 rounded-full ${PRIORITY_DOT[t.priority]}`} />
           <span className="truncate">{t.title}</span>
         </div>
+      ))}
+    </div>
+  );
+}
+
+/** Clickable name tags floating above each octopus in the comparison lineup. */
+export function SpeciesTags({
+  store,
+  items,
+  onPick,
+}: {
+  store: LabelStore;
+  items: { id: string; name: string; position: [number, number, number] }[];
+  onPick: (id: string) => void;
+}) {
+  useEffect(() => {
+    for (const item of items) store.anchor(`species-${item.id}`).set(...item.position);
+    return () => {
+      for (const item of items) store.anchors.delete(`species-${item.id}`);
+    };
+  }, [store, items]);
+
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      {items.map((item) => (
+        <button
+          key={item.id}
+          ref={(el) => {
+            const key = `species-${item.id}`;
+            if (el) store.elements.set(key, el);
+            else store.elements.delete(key);
+          }}
+          onClick={() => onPick(item.id)}
+          className="pointer-events-auto absolute top-0 left-0 rounded-full bg-brand-gradient px-4 py-1.5 text-sm whitespace-nowrap text-white opacity-0 shadow-lg transition-[opacity,scale] hover:scale-105"
+        >
+          {item.name}
+        </button>
       ))}
     </div>
   );

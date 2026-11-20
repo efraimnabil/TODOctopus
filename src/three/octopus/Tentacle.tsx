@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
-import type { LabelStore } from "../labels";
 import type { Tentacle as TentacleModel } from "@/game/types";
+import type { LabelStore } from "../labels";
 import {
   attract,
   collideFloor,
@@ -15,51 +15,54 @@ import { SUBDIVISIONS, TubeBuilder, writeSuckers } from "../geometry/tube";
 import type { FxBus, Vec3 } from "../fx/FxBus";
 import { useLazyRef } from "../useLazyRef";
 import {
-  ANCHOR_RING,
-  ANCHOR_Y,
   CHAIN_POINTS,
-  SEGMENT,
   SLOT_ANGLES_DEG,
   STEP,
   damp,
   radiusAt,
-  smoothstep,
+  segmentLength,
   type Palette,
 } from "./constants";
-import { createSkinMaterial } from "./materials";
+import { armColor, createSkinMaterial } from "./materials";
 import { createPoseParams, writePose } from "./pose";
 import type { OctoState, TuningRef } from "./shared";
+import type { Species } from "./species";
 
 interface Props {
   model: TentacleModel;
+  species: Species;
   octo: OctoState;
   palette: Palette;
   suckerMaterial: THREE.Material;
   fx: FxBus;
   tuning: TuningRef;
   labels: LabelStore | null;
+  interactive: boolean;
   onCut: (id: string, cutIndex: number) => void;
   onRetracted: (id: string) => void;
 }
 
 export function Tentacle({
   model,
+  species,
   octo,
   palette,
   suckerMaterial,
   fx,
   tuning,
   labels,
+  interactive,
   onCut,
   onRetracted,
 }: Props) {
   const angle = THREE.MathUtils.degToRad(SLOT_ANGLES_DEG[model.slot]);
   const rx = Math.sin(angle);
   const rz = Math.cos(angle);
-  const canCut = model.status === "alive";
+  const canCut = interactive && model.status === "alive";
+  const arm = species.arm;
 
   const [hovered, setHovered] = useState(false);
-  const material = useMemo(() => createSkinMaterial(), []);
+  const material = useMemo(() => createSkinMaterial(palette), [palette]);
   const tube = useMemo(() => new TubeBuilder(CHAIN_POINTS), []);
   const suckers = useRef<THREE.InstancedMesh>(null);
 
@@ -80,41 +83,37 @@ export function Tentacle({
       stump: false,
       initialized: false,
       retractedSent: false,
+    };
+    return s;
+  });
+
+  // Closures read the latest species/palette, so they're rebuilt with them.
+  const shapeFns = useMemo(() => {
+    const s = sim.current;
+    return {
       radiusOfPoint: (i: number) =>
-        radiusAt(i / (CHAIN_POINTS - 1)) * s.radiusScale,
+        radiusAt(i / (CHAIN_POINTS - 1), arm) * s.radiusScale,
       radiusOfRing: (ring: number, rings: number) => {
-        let r = radiusAt(ring / (tube.maxRings - 1)) * s.radiusScale;
+        let r = radiusAt(ring / (tube.maxRings - 1), arm) * s.radiusScale;
         if (s.stump) {
           if (ring === rings - 1) r = 0;
           else if (ring === rings - 2) r *= 0.8;
         }
         return r;
       },
-      colorOfRing: (
-        ring: number,
-        rings: number,
-        a: number,
-        out: THREE.Color,
-      ) => {
-        const t = ring / (tube.maxRings - 1);
-        out.copy(palette.skin).lerp(palette.tip, smoothstep(0.1, 1, t));
-        const under = Math.sin(a);
-        if (under > 0) out.lerp(palette.underside, under * under * 0.55);
+      colorOfRing: (ring: number, rings: number, a: number, out: THREE.Color) => {
+        armColor(palette, species, ring / (tube.maxRings - 1), a, out);
         if (s.stump && ring >= rings - 2) out.lerp(palette.wound, 0.75);
       },
     };
-    return s;
-  });
+  }, [sim, arm, tube, palette, species]);
 
   // Slash: split the chain, hand the tail to the scene as a severed piece.
   useEffect(() => {
     const s = sim.current;
     if (model.status !== "cut" || s.stump) return;
     const N = CHAIN_POINTS;
-    const idx = Math.min(
-      N - 5,
-      Math.max(4, model.cutIndex ?? Math.round(N * 0.5)),
-    );
+    const idx = Math.min(N - 5, Math.max(4, model.cutIndex ?? Math.round(N * 0.5)));
     if (s.initialized) {
       const { chain } = s;
       const k = idx * 3;
@@ -146,10 +145,10 @@ export function Tentacle({
   useEffect(
     () => () => {
       material.dispose();
-      tube.dispose();
     },
-    [material, tube],
+    [material],
   );
+  useEffect(() => () => tube.dispose(), [tube]);
 
   useEffect(() => {
     if (!labels) return;
@@ -179,13 +178,13 @@ export function Tentacle({
     s.hover += ((hovered && canCut ? 1 : 0) - s.hover) * damp(8, dt);
 
     const sc = octo.scale;
-    const ax = rx * ANCHOR_RING * sc;
-    const ay = octo.offsetY + ANCHOR_Y * sc;
-    const az = rz * ANCHOR_RING * sc;
+    const ax = rx * arm.anchorRing * sc;
+    const ay = octo.offsetY + arm.anchorY * sc;
+    const az = rz * arm.anchorRing * sc;
     const { chain, target, pose } = s;
     const count = s.activeCount;
     chain.count = count;
-    chain.rest = SEGMENT * sc * Math.max(0.02, s.grow);
+    chain.rest = segmentLength(arm) * sc * Math.max(0.02, s.grow);
     s.radiusScale = sc * (0.35 + 0.65 * s.grow);
 
     const hurt = fx.hurt;
@@ -216,11 +215,11 @@ export function Tentacle({
       pinPoint(chain, 0, target[0], target[1], target[2]);
       pinPoint(chain, 1, target[3], target[4], target[5]);
       solveDistances(chain, 6, 2);
-      collideFloor(chain, 0, s.radiusOfPoint, 0.25);
+      collideFloor(chain, 0, shapeFns.radiusOfPoint, 0.25);
     }
     if (steps === 4) s.acc = 0;
 
-    tube.update(chain.pos, count, s.side, s.radiusOfRing, s.colorOfRing);
+    tube.update(chain.pos, count, s.side, shapeFns.radiusOfRing, shapeFns.colorOfRing);
     if (suckers.current) writeSuckers(suckers.current, tube, 3, tube.rings - 3);
 
     material.emissiveIntensity = s.hover * 0.45;
@@ -259,9 +258,9 @@ export function Tentacle({
         geometry={tube.geometry}
         material={material}
         frustumCulled={false}
-        onPointerOver={handleOver}
-        onPointerOut={handleOut}
-        onClick={handleClick}
+        onPointerOver={interactive ? handleOver : undefined}
+        onPointerOut={interactive ? handleOut : undefined}
+        onClick={interactive ? handleClick : undefined}
       />
       <instancedMesh
         ref={suckers}

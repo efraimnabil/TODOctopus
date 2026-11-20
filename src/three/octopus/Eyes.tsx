@@ -1,22 +1,18 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { FxBus } from "../fx/FxBus";
 import { damp } from "./constants";
 import type { OctoState } from "./shared";
+import type { Species } from "./species";
 
-const EYE_R = 0.19;
-/** Relative to the mantle center */
-const EYE_POSITIONS: [number, number, number][] = [
-  [-0.43, -0.4, 0.6],
-  [0.43, -0.4, 0.6],
-];
 const LID_OPEN = -1.15;
 const LID_CLOSED = 1.5;
 
 interface Props {
   octo: OctoState;
   fx: FxBus;
+  shape: Species["eyes"];
   lidMaterial: THREE.Material;
   whiteMaterial: THREE.Material;
   irisMaterial: THREE.Material;
@@ -30,6 +26,7 @@ interface Props {
 export function Eyes({
   octo,
   fx,
+  shape,
   lidMaterial,
   whiteMaterial,
   irisMaterial,
@@ -43,11 +40,17 @@ export function Eyes({
     [],
   );
   const sphere = useMemo(() => new THREE.SphereGeometry(1, 32, 24), []);
+  const EYE_R = shape.radius;
+  const [ex, ey, ez] = shape.position;
+  const positions: [number, number, number][] = [
+    [-ex, ey, ez],
+    [ex, ey, ez],
+  ];
   const lidGeo = useMemo(
-    () =>
-      new THREE.SphereGeometry(EYE_R * 1.1, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2),
-    [],
+    () => new THREE.SphereGeometry(EYE_R * 1.1, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2),
+    [EYE_R],
   );
+  useEffect(() => () => lidGeo.dispose(), [lidGeo]);
 
   useFrame((state, delta) => {
     const dt = Math.min(delta, 1 / 20);
@@ -75,7 +78,7 @@ export function Eyes({
       const dx = tmp.target.x - tmp.eye.x;
       const dy = tmp.target.y - tmp.eye.y;
       const dz = tmp.target.z - tmp.eye.z;
-      const baseYaw = i === 0 ? -0.35 : 0.35;
+      const baseYaw = i === 0 ? -shape.yaw : shape.yaw;
       const yaw = THREE.MathUtils.clamp(Math.atan2(dx, dz) - baseYaw, -0.6, 0.6);
       const pitch = THREE.MathUtils.clamp(
         -Math.atan2(dy, Math.hypot(dx, dz)),
@@ -91,8 +94,8 @@ export function Eyes({
 
   return (
     <>
-      {EYE_POSITIONS.map((p, i) => (
-        <group key={i} position={p} rotation={[0, i === 0 ? -0.35 : 0.35, 0]}>
+      {positions.map((p, i) => (
+        <group key={i} position={p} rotation={[0, i === 0 ? -shape.yaw : shape.yaw, 0]}>
           <group
             ref={(el) => {
               balls.current[i] = el;

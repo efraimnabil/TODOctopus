@@ -8,8 +8,9 @@ import {
   solveDistances,
 } from "../physics/verlet";
 import { SUBDIVISIONS, TubeBuilder, writeSuckers } from "../geometry/tube";
-import { STEP, radiusAt, smoothstep, type Palette } from "../octopus/constants";
-import { createSkinMaterial, createSuckerMaterial } from "../octopus/materials";
+import { STEP, radiusAt, type Palette } from "../octopus/constants";
+import { armColor, createSkinMaterial, createSuckerMaterial } from "../octopus/materials";
+import type { Species } from "../octopus/species";
 import { useLazyRef } from "../useLazyRef";
 import type { FxBus, SeveredSpawn } from "./FxBus";
 
@@ -18,6 +19,7 @@ const LIFETIME = 3.9;
 interface Props {
   spawn: SeveredSpawn;
   palette: Palette;
+  species: Species;
   fx: FxBus;
   onDone: (id: number) => void;
 }
@@ -26,13 +28,13 @@ interface Props {
  * The cut-off part of a tentacle: flung out, falls to the sand, wriggles
  * for a couple of seconds, then fades away.
  */
-export function SeveredPiece({ spawn, palette, fx, onDone }: Props) {
+export function SeveredPiece({ spawn, palette, species, fx, onDone }: Props) {
   const tube = useMemo(() => new TubeBuilder(spawn.count), [spawn.count]);
   const material = useMemo(() => {
-    const m = createSkinMaterial();
+    const m = createSkinMaterial(palette);
     m.transparent = true;
     return m;
-  }, []);
+  }, [palette]);
   const suckerMat = useMemo(() => {
     const m = createSuckerMaterial(palette);
     m.transparent = true;
@@ -60,16 +62,14 @@ export function SeveredPiece({ spawn, palette, fx, onDone }: Props) {
       arc: (ring: number, rings: number) =>
         spawn.s0 + (ring / Math.max(1, rings - 1)) * (1 - spawn.s0),
       radiusOfPoint: (i: number) =>
-        radiusAt(spawn.s0 + (i / (spawn.count - 1)) * (1 - spawn.s0)) * s.fade,
+        radiusAt(spawn.s0 + (i / (spawn.count - 1)) * (1 - spawn.s0), species.arm) * s.fade,
       radiusOfRing: (ring: number, rings: number) => {
         if (ring === 0) return 0;
-        const r = radiusAt(s.arc(ring, rings)) * s.fade;
+        const r = radiusAt(s.arc(ring, rings), species.arm) * s.fade;
         return ring === 1 ? r * 0.8 : r;
       },
       colorOfRing: (ring: number, rings: number, a: number, out: THREE.Color) => {
-        out.copy(palette.skin).lerp(palette.tip, smoothstep(0.1, 1, s.arc(ring, rings)));
-        const under = Math.sin(a);
-        if (under > 0) out.lerp(palette.underside, under * under * 0.55);
+        armColor(palette, species, s.arc(ring, rings), a, out);
         if (ring <= 1) out.lerp(palette.wound, 0.75);
       },
     };
