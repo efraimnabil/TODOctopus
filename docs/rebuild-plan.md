@@ -111,6 +111,12 @@ Each phase ends with something you can open and try. Phase 1 comes early on purp
 - Optimistic UI (`useOptimistic`): animations never wait for the network; a failed save rolls back with a toast.
 - Rate limiting on auth + writes; a Vercel cron job removes anonymous users inactive for 90 days.
 - **Done when:** a guest can play, refresh and still have their octopuses, then sign up and keep everything; a logged-in user sees the same data on another device.
+- *Built:*
+  - **Database:** Neon project `todoctopus`. Its `main` branch serves production and its `dev` branch serves local dev and Vercel previews. Migrations live in `drizzle/` and you run them with `pnpm db:migrate`.
+  - **Saving:** the server action `commitCommand` replays each game command with the same rules, inside a transaction holding a per-user advisory lock. A unique index on (octopus, slot) for every task that isn't removed guards against two tasks taking the same slot.
+  - **Rate limits:** Better Auth's limiter keeps its counts in the database, and game writes are capped at 120 per minute per user.
+  - **Cleanup:** the daily cron `/api/cron/cleanup` deletes guests idle for 90 days.
+  - **Not built yet:** email verification and password reset, which need an email provider, and Google sign-in.
 
 ### Phase 4 — The full experience
 - Landing page with a live 3D octopus hero ("Let's start" drops you straight into the game, no sign-up).

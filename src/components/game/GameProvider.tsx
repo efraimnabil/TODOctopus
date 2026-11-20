@@ -2,13 +2,13 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useStore } from "zustand";
-import { BrowserRepository } from "@/game/repository";
+import { ServerRepository } from "@/game/serverRepository";
 import { createGameStore, type GameStore, type GameStoreState } from "@/game/store";
 
 const GameContext = createContext<GameStore | null>(null);
 
 export function GameProvider({ children }: { children: ReactNode }) {
-  const [store] = useState(() => createGameStore(new BrowserRepository()));
+  const [store] = useState(() => createGameStore(new ServerRepository()));
   useEffect(() => {
     void store.getState().load();
   }, [store]);

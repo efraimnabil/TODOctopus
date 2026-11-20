@@ -88,4 +88,29 @@ describe("game store", () => {
     expect(again.getState().game.tasks[0].title).toBe("a");
     expect(again.getState().activeId).toBe(get().activeId);
   });
+
+  it("rolls back a change the server didn't save", async () => {
+    const { get, repo } = setup();
+    await get().load();
+    get().addTask({ title: "kept", priority: 1 });
+    await flush();
+    repo.failNext = true;
+    get().addTask({ title: "lost", priority: 1 });
+    expect(get().game.tasks).toHaveLength(2);
+    expect(get().pending).toBe(1);
+    await flush();
+    await flush();
+    expect(get().error).toMatch(/undone/);
+    expect(get().pending).toBe(0);
+    expect(get().game.tasks.map((t) => t.title)).toEqual(["kept"]);
+  });
+
+  it("the first saved change makes the newcomer a guest", async () => {
+    const { get } = setup();
+    await get().load();
+    expect(get().account).toBeNull();
+    get().addTask({ title: "a", priority: 1 });
+    await flush();
+    expect(get().account).toMatchObject({ isGuest: true });
+  });
 });

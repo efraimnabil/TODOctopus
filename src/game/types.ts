@@ -55,3 +55,10 @@ export interface Stats {
   /** Days in a row (ending today, or yesterday if nothing yet today) with ≥1 finished task */
   streak: number;
 }
+
+/** Who the game belongs to. Guests are real (anonymous) accounts too. */
+export interface Account {
+  name: string;
+  email: string | null;
+  isGuest: boolean;
+}

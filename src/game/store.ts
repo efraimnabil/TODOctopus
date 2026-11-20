@@ -10,7 +10,7 @@ import {
   type GameEvent,
 } from "./rules";
 import type { Octopus as SceneOctopus, Tentacle as SceneTentacle } from "./scene";
-import type { GameState, Octopus, TaskInput } from "./types";
+import type { Account, GameState, Octopus, TaskInput } from "./types";
 
 export interface GameDeps {
   now: () => number;
@@ -40,8 +40,14 @@ export interface GameStoreState {
   /** Death animation done: show the "defeated" card for this octopus */
   defeatedCard: string | null;
   error: string | null;
+  /** Who owns this game; null until the first change creates a guest */
+  account: Account | null;
+  /** Changes not yet confirmed as saved */
+  pending: number;
 
   load(): Promise<void>;
+  /** Re-read the saved game (after signing in/out, or a failed save) */
+  reload(): Promise<void>;
   addTask(input: TaskInput): boolean;
   editTask(taskId: string, patch: Partial<TaskInput>): boolean;
   completeTask(taskId: string, cutIndex?: number): void;
@@ -72,10 +78,25 @@ export function createGameStore(repo: GameRepository, deps: GameDeps = browserDe
         set({ error: err instanceof RuleError ? err.message : "Something went wrong" });
         return false;
       }
-      set((s) => ({ game: result.state, error: null, ...react(s, result.events) }));
-      repo.commit(command, result.state).catch(() => {
-        set({ error: "Couldn't save that change" });
-      });
+      set((s) => ({
+        game: result.state,
+        error: null,
+        pending: s.pending + 1,
+        ...react(s, result.events),
+      }));
+      repo.commit(command, result.state).then(
+        () =>
+          set((s) => ({
+            pending: s.pending - 1,
+            // The first save gives a newcomer a guest account.
+            account: s.account ?? { name: "Guest", email: null, isGuest: true },
+          })),
+        (err: unknown) => {
+          set((s) => ({ pending: s.pending - 1, error: saveErrorMessage(err) }));
+          // Undo what the server didn't accept.
+          void get().reload();
+        },
+      );
       return true;
     }
 
@@ -108,10 +129,38 @@ export function createGameStore(repo: GameRepository, deps: GameDeps = browserDe
       dying: [],
       defeatedCard: null,
       error: null,
+      account: null,
+      pending: 0,
 
       async load() {
-        const game = await repo.load();
-        set({ game, status: "ready", activeId: livingOctopuses(game)[0]?.id ?? null });
+        const { game, account } = await repo.load();
+        set({ game, account, status: "ready", activeId: livingOctopuses(game)[0]?.id ?? null });
+      },
+
+      async reload() {
+        let loaded;
+        try {
+          loaded = await repo.load();
+        } catch {
+          set({ error: "Couldn't reach the server" });
+          return;
+        }
+        const { game, account } = loaded;
+        set((s) => {
+          const alive = livingOctopuses(game);
+          const keep = alive.some((o) => o.id === s.activeId);
+          return {
+            game,
+            account,
+            activeId: keep ? s.activeId : (alive[0]?.id ?? null),
+            selectedId: game.tasks.some((t) => t.id === s.selectedId && t.status === "open")
+              ? s.selectedId
+              : null,
+            retracting: [],
+            dying: [],
+            defeatedCard: null,
+          };
+        });
       },
 
       addTask(input) {
@@ -197,6 +246,13 @@ export function createGameStore(repo: GameRepository, deps: GameDeps = browserDe
       },
     };
   });
+}
+
+function saveErrorMessage(err: unknown): string {
+  const reason = err instanceof Error ? err.message : "";
+  if (reason === "rate-limited") return "Whoa, that's a lot of changes. Slow down a moment.";
+  if (reason === "no-session") return "Couldn't start your session. Check your connection.";
+  return "Couldn't save that change, so it was undone.";
 }
 
 // ── Selectors ──────────────────────────────────────────────────────────────

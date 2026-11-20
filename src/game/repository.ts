@@ -1,14 +1,20 @@
 import type { GameCommand } from "./rules";
 import { emptyGame } from "./rules";
-import type { GameState } from "./types";
+import type { Account, GameState } from "./types";
+
+export interface Loaded {
+  game: GameState;
+  /** null: no session yet (a guest gets one on their first change) */
+  account: Account | null;
+}
 
 /**
  * Where the game is kept. The store applies every command locally first (so
- * animations never wait), then hands it here to be saved.
- * Phase 3 adds a server-backed repository that replays the command there.
+ * animations never wait), then hands it here to be saved. A rejected promise
+ * makes the store roll back to the saved game.
  */
 export interface GameRepository {
-  load(): Promise<GameState>;
+  load(): Promise<Loaded>;
   commit(command: GameCommand, next: GameState): Promise<void>;
 }
 
@@ -16,34 +22,19 @@ export interface GameRepository {
 export class MemoryRepository implements GameRepository {
   constructor(private state: GameState = emptyGame()) {}
   readonly commands: GameCommand[] = [];
+  /** Set to make the next commit fail */
+  failNext = false;
 
-  async load() {
-    return this.state;
+  async load(): Promise<Loaded> {
+    return { game: this.state, account: null };
   }
 
   async commit(command: GameCommand, next: GameState) {
+    if (this.failNext) {
+      this.failNext = false;
+      throw new Error("save failed");
+    }
     this.commands.push(command);
     this.state = next;
-  }
-}
-
-const STORAGE_KEY = "todoctopus.game.v1";
-
-/** Keeps the game in this browser only, until accounts arrive (Phase 3). */
-export class BrowserRepository implements GameRepository {
-  async load(): Promise<GameState> {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return emptyGame();
-      const parsed = JSON.parse(raw) as Partial<GameState>;
-      if (!Array.isArray(parsed.octopuses) || !Array.isArray(parsed.tasks)) return emptyGame();
-      return { octopuses: parsed.octopuses, tasks: parsed.tasks };
-    } catch {
-      return emptyGame();
-    }
-  }
-
-  async commit(_command: GameCommand, next: GameState) {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   }
 }

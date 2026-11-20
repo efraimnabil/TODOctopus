@@ -13,6 +13,7 @@ import {
   type SpeciesId,
 } from "@/three/octopus/species";
 import { GameProvider, useGame } from "./GameProvider";
+import { AccountMenu } from "./AccountMenu";
 import { TaskPanel } from "./TaskPanel";
 
 export default function Game() {
@@ -42,6 +43,7 @@ function GameScreen() {
       {ready && (
         <>
           <EmptySea />
+          <AccountMenu />
           <TaskPanel
             footer={
               <>
