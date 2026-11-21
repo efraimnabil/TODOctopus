@@ -11,7 +11,7 @@ A to-do list where every task is a tentacle of a living 3D octopus. Add a task a
 - Give a task a **priority** (low, medium, high) and an optional **due date**. A tentacle past its due date glows angry red and its label turns red too.
 - **Sort** the list by priority, due date, newest or oldest, and filter it.
 - Pick a **body** for your octopus: Classic, Common, Giant Pacific, Blue-ringed, Realistic, a translucent Moon jelly, or *Surprise me* for a random one each time.
-- Defeated octopuses go to the trophy room (`/trophies`) with your streak, an activity chart and 11 **achievements** (you get a toast when one unlocks). Share a defeat or your trophies with the share button.
+- Defeated octopuses go to the trophy room (`/trophies`) with your streak, an activity chart and 11 **achievements** (you get a toast when one unlocks). Share a defeat or a trophy with the share button: the link (`/s`) previews as a generated card (`/api/og`) with the octopus's name and your numbers, and only the game's own octopus names can appear on it.
 - **AI helpers** (optional, off without an API key, and only after the player allows them): split a task into steps, fill the form from a sentence ("call mom tomorrow, important", Arabic works too), speak a task, and a defeated octopus's last words. The AI only suggests; you still press Grow. Task text is sent to Anthropic's Claude; see `/about#ai`.
 - The octopus **talks back** (Playful, Savage, Kind or Quiet), and **What first?** picks the tentacle to tackle next: overdue, then due soon, then high priority.
 - Sounds are synthesized in the browser, with haptics on phones. Toggle them with the sound button.

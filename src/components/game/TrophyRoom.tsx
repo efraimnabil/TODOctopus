@@ -6,6 +6,7 @@ import { achievements, activity } from "@/game/achievements";
 import { computeStats } from "@/game/rules";
 import { trophies } from "@/game/view";
 import { useNow } from "@/lib/useNow";
+import { sharePath, slashedText } from "@/lib/share";
 import { ShareButton } from "../ShareButton";
 import { GameProvider, useGame } from "./GameProvider";
 
@@ -85,7 +86,8 @@ function Room() {
                   </p>
                   <ShareButton
                     className="mt-3"
-                    text={`I defeated ${t.name} on TODOctopus: ${t.tasks.length} tentacles slashed. 🐙`}
+                    text={`I defeated ${t.name} on TODOctopus: ${slashedText(t.tasks.length)}. 🐙`}
+                    path={sharePath({ name: t.name, slashed: t.tasks.length, streak: 0 })}
                   />
                   <ul className="mt-3 space-y-0.5 text-sm text-foam/70">
                     {t.tasks.map((task) => (

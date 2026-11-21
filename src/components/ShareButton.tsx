@@ -2,12 +2,23 @@
 
 import { useState } from "react";
 
-/** Shares a line of text with the system share sheet, or copies it. */
-export function ShareButton({ text, className = "" }: { text: string; className?: string }) {
+/**
+ * Shares a line of text with the system share sheet, or copies it. `path`
+ * is the page to link to (it can carry a share card); the home page by default.
+ */
+export function ShareButton({
+  text,
+  path = "",
+  className = "",
+}: {
+  text: string;
+  path?: string;
+  className?: string;
+}) {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
 
   const share = async () => {
-    const message = `${text} ${window.location.origin}`;
+    const message = `${text} ${window.location.origin}${path}`;
     try {
       if (navigator.share) {
         await navigator.share({ text: message });
