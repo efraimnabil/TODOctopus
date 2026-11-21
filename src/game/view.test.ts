@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterTasks, onboardingStep, sortTasks, trophies } from "./view";
+import { filterTasks, onboardingStep, sortTasks, stepSelection, trophies } from "./view";
 import type { GameState, Octopus, Priority, Task, TaskStatus } from "./types";
 
 const task = (
@@ -54,6 +54,22 @@ describe("sortTasks", () => {
     const copy = [...sample];
     sortTasks(sample, "newest");
     expect(sample).toEqual(copy);
+  });
+});
+
+describe("stepSelection", () => {
+  const list = [task("a", 1, 1), task("b", 1, 2), task("c", 1, 3)];
+  it("starts at the first or last task when nothing is selected", () => {
+    expect(stepSelection(list, null, 1)).toBe("a");
+    expect(stepSelection(list, null, -1)).toBe("c");
+  });
+  it("moves and wraps", () => {
+    expect(stepSelection(list, "a", 1)).toBe("b");
+    expect(stepSelection(list, "c", 1)).toBe("a");
+    expect(stepSelection(list, "a", -1)).toBe("c");
+  });
+  it("has nothing to select in an empty list", () => {
+    expect(stepSelection([], null, 1)).toBeNull();
   });
 });
 

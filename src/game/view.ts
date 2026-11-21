@@ -36,6 +36,14 @@ export function filterTasks(tasks: readonly Task[], priority: PriorityFilter): T
  * Which hint a newcomer should see:
  * add → nothing yet, slash → has open tasks but has never slashed one, done.
  */
+/** The next (+1) or previous (-1) task in a list, wrapping; the first/last if none is selected. */
+export function stepSelection(tasks: readonly Task[], selectedId: string | null, direction: 1 | -1): string | null {
+  if (tasks.length === 0) return null;
+  const i = tasks.findIndex((t) => t.id === selectedId);
+  if (i === -1) return (direction === 1 ? tasks[0] : tasks[tasks.length - 1]).id;
+  return tasks[(i + direction + tasks.length) % tasks.length].id;
+}
+
 export type OnboardingStep = "add" | "slash" | "done";
 
 export function onboardingStep(game: GameState): OnboardingStep {

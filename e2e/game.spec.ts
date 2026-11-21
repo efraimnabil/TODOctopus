@@ -111,6 +111,26 @@ test("a task with a past deadline is marked overdue and can be re-dated", async 
   await expect(taskRow(page, "Ancient errand")).toContainText("Due ");
 });
 
+test("tasks can be picked and slashed from the keyboard", async ({ page }) => {
+  await openGame(page);
+  await addTask(page, "First errand");
+  await addTask(page, "Second errand");
+  await page.locator("body").click({ position: { x: 700, y: 300 } });
+
+  await page.keyboard.press("j");
+  await expect(page.locator("aside li[class*=ring-brand-pink]")).toHaveCount(1);
+  await page.keyboard.press("s");
+  await expect(page.getByText("Slashed (1)")).toBeVisible();
+
+  await page.keyboard.press("?");
+  await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  await page.keyboard.press("n");
+  await expect(page.locator("#new-task")).toBeFocused();
+});
+
 test("the landing page, About and a missing page all render", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("tentacle");
