@@ -153,3 +153,26 @@ export const task = pgTable(
     check("task_status_check", sql`${t.status} in ('open', 'done', 'removed')`),
   ],
 );
+
+// ── API tokens (for the MCP server) ────────────────────────────────────────
+
+/**
+ * Personal access tokens. Only a SHA-256 hash is stored; the token itself is
+ * shown once, when it is created.
+ */
+export const apiToken = pgTable(
+  "api_token",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    label: text("label").notNull(),
+    /** First characters of the token, so people can tell tokens apart */
+    prefix: text("prefix").notNull(),
+    tokenHash: text("token_hash").notNull().unique(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+  },
+  (t) => [index("api_token_user_id_idx").on(t.userId)],
+);

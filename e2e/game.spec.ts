@@ -246,3 +246,83 @@ test("What first? picks the most urgent tentacle and says why", async ({ page })
   await expect(page.getByTestId("octopus-speech")).toContainText("Start with");
   await saved(page);
 });
+
+test("an MCP client with a personal token can add, list and slash tasks", async ({ page, request }) => {
+  // A guest has no business with tokens.
+  await openGame(page);
+  await addTask(page, "Start my session");
+  await saved(page); // the guest account is created on the first save
+  await page.goto("/settings/tokens");
+  await expect(page.getByText(/Tokens are for accounts/)).toBeVisible();
+
+  // Make an account, then a token.
+  await page.goto("/play");
+  await page.getByRole("button", { name: "Save your progress" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Email").fill(uniqueEmail());
+  await dialog.getByLabel("Password").fill(PASSWORD);
+  await dialog.getByRole("button", { name: "Create account" }).click();
+  await expect(page.getByRole("button", { name: "Account" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Account" }).click();
+  await page.getByRole("link", { name: "API tokens" }).click();
+  await page.getByLabel("Token name").fill("e2e client");
+  await page.getByRole("button", { name: "Create" }).click();
+  const token = (await page.getByRole("region", { name: "New token" }).locator("code").first().textContent())!.trim();
+  expect(token).toMatch(/^tc_[A-Za-z0-9_-]{43}$/);
+  await expect(page.getByText("e2e client").first()).toBeVisible();
+
+  const call = (body: unknown, auth: string | null = `Bearer ${token}`) =>
+    request.post("/api/mcp", {
+      headers: {
+        "content-type": "application/json",
+        accept: "application/json, text/event-stream",
+        ...(auth ? { authorization: auth } : {}),
+      },
+      data: body,
+    });
+  const tool = async (name: string, args: Record<string, unknown> = {}) => {
+    const res = await call({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: args } });
+    expect(res.status()).toBe(200);
+    const json = await res.json();
+    return json.result as { isError?: boolean; content: { text: string }[] };
+  };
+
+  // No token, or a made-up one: refused.
+  expect((await call({ jsonrpc: "2.0", id: 1, method: "tools/list" }, null)).status()).toBe(401);
+  expect((await call({ jsonrpc: "2.0", id: 1, method: "tools/list" }, `Bearer tc_${"a".repeat(43)}`)).status()).toBe(401);
+
+  // The tools are advertised.
+  const list = await call({ jsonrpc: "2.0", id: 1, method: "tools/list" });
+  expect(list.status()).toBe(200);
+  const names = ((await list.json()).result.tools as { name: string }[]).map((t) => t.name);
+  expect(names).toEqual(expect.arrayContaining(["list_tasks", "add_task", "slash_task", "list_octopuses", "get_stats"]));
+
+  // Add a task from "Claude", with a deadline.
+  const added = await tool("add_task", { title: "Buy milk", priority: "high", due: "2099-01-01" });
+  expect(added.isError).toBeFalsy();
+  const id = JSON.parse(added.content[0].text).added as string;
+
+  const listed = JSON.parse((await tool("list_tasks")).content[0].text);
+  expect(listed.tasks.map((t: { title: string }) => t.title)).toContain("Buy milk");
+
+  // A bad date is refused politely, not with a crash.
+  expect((await tool("add_task", { title: "x", due: "2026-02-31" })).isError).toBe(true);
+
+  // The game picks it up when the player comes back to the tab.
+  await page.goto("/play");
+  await expect(taskRow(page, "Buy milk")).toBeVisible();
+
+  // Slash it over MCP, and the tentacle is gone from the open list.
+  const slashed = await tool("slash_task", { task_id: id });
+  expect(slashed.isError).toBeFalsy();
+  expect((await tool("slash_task", { task_id: id })).isError).toBe(true);
+  const stats = JSON.parse((await tool("get_stats")).content[0].text);
+  expect(stats.finished).toBeGreaterThanOrEqual(1);
+
+  // Revoking stops the token working.
+  await page.goto("/settings/tokens");
+  await page.getByRole("button", { name: "Revoke e2e client" }).click();
+  await expect(page.getByText("No tokens yet.")).toBeVisible();
+  expect((await call({ jsonrpc: "2.0", id: 1, method: "tools/list" })).status()).toBe(401);
+});

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { MemoryRepository } from "./repository";
+import { MemoryRepository, type GameRepository } from "./repository";
+import { apply, emptyGame } from "./rules";
+import type { GameState } from "./types";
 import { createGameStore, onStage, toScene, type GameDeps } from "./store";
 
 function setup() {
@@ -154,5 +156,56 @@ describe("game store", () => {
     get().addTask({ title: "a", priority: 1 });
     await flush();
     expect(get().account).toMatchObject({ isGuest: true });
+  });
+});
+
+describe("sync (changes made elsewhere)", () => {
+  /** A repository whose saved game can change behind the store's back. */
+  function outside() {
+    let saved: GameState = emptyGame();
+    const repo: GameRepository = {
+      load: async () => ({ game: saved, account: null }),
+      commit: async (_command, next) => {
+        saved = next;
+      },
+    };
+    let n = 0;
+    const store = createGameStore(repo, { now: () => 1_000 + n, random: () => 0.5, id: () => `id${++n}` });
+    const addElsewhere = (title: string) => {
+      saved = apply(saved, {
+        type: "addTask",
+        taskId: `ext-${title}`,
+        input: { title, priority: 2, description: "", dueAt: null },
+        at: 5_000,
+        spawn: { id: "ext-octopus", name: "Elsewhere", seed: 1 },
+      }).state;
+    };
+    return { store, addElsewhere };
+  }
+
+  it("shows a task that was added elsewhere", async () => {
+    const { store, addElsewhere } = outside();
+    await store.getState().load();
+    addElsewhere("From Claude");
+    await store.getState().sync();
+    expect(store.getState().game.tasks.map((t) => t.title)).toEqual(["From Claude"]);
+    expect(store.getState().activeId).toBe("ext-octopus");
+  });
+
+  it("leaves things alone while a save is in flight", async () => {
+    const { store, addElsewhere } = outside();
+    await store.getState().load();
+    store.getState().addTask({ title: "Mine", priority: 1 }); // pending until the commit settles
+    addElsewhere("Theirs");
+    await store.getState().sync();
+    expect(store.getState().game.tasks.map((t) => t.title)).toEqual(["Mine"]);
+  });
+
+  it("keeps the same game object when nothing changed", async () => {
+    const { store } = outside();
+    await store.getState().load();
+    const before = store.getState().game;
+    await store.getState().sync();
+    expect(store.getState().game).toBe(before);
   });
 });

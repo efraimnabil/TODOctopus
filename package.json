@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.107",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "@neondatabase/serverless": "^1.2.1",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.2",

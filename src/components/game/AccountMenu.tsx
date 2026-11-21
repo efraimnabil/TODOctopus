@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, type SubmitEvent } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useFocusTrap } from "@/lib/useFocusTrap";
@@ -38,13 +39,19 @@ export function AccountMenu() {
             <div className="glass absolute top-12 right-0 w-56 rounded-2xl p-3 text-sm">
               <p className="truncate text-foam">{account.name}</p>
               <p className="truncate text-xs text-foam/55">{account.email}</p>
+              <Link
+                href="/settings/tokens"
+                className="mt-3 block w-full rounded-full px-3 py-1.5 text-center text-foam/80 hover:bg-white/10"
+              >
+                API tokens
+              </Link>
               <button
                 onClick={async () => {
                   setMenuOpen(false);
                   await authClient.signOut();
                   await reload();
                 }}
-                className="mt-3 w-full rounded-full bg-white/10 px-3 py-1.5 text-foam hover:bg-white/15"
+                className="mt-1 w-full rounded-full bg-white/10 px-3 py-1.5 text-foam hover:bg-white/15"
               >
                 Sign out
               </button>

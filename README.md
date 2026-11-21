@@ -30,6 +30,20 @@ A to-do list where every task is a tentacle of a living 3D octopus. Add a task a
 | `?` | Show the shortcut list |
 | `Esc` | Close a dialog or clear the selection |
 
+## Use it from Claude (MCP)
+
+TODOctopus is also an [MCP](https://modelcontextprotocol.io) server, so Claude Code, Claude Desktop or any MCP client can manage your octopus ("add *buy milk* to my octopus").
+
+1. Create an account (*Save your progress*), then open **API tokens** in the account menu (`/settings/tokens`) and create a token. It is shown once; only its hash is stored.
+2. Connect a client, for example Claude Code:
+
+```bash
+claude mcp add --transport http todoctopus https://todoctopus.vercel.app/api/mcp \
+  --header "Authorization: Bearer <your token>"
+```
+
+Tools: `list_tasks`, `add_task`, `slash_task`, `list_octopuses`, `get_stats`. Every change goes through the same rules as the browser. It can't delete anything or touch your account. Tokens are for accounts only (not guests), limited to five each, and can be revoked any time. The game picks up changes when you return to its tab.
+
 ## Stack
 
 | | |
@@ -38,7 +52,8 @@ A to-do list where every task is a tentacle of a living 3D octopus. Add a task a
 | 3D | React Three Fiber + drei + postprocessing. The octopus is procedural (Verlet-chain tentacles), not a model file |
 | Backend | Server actions + Neon Postgres via Drizzle ORM |
 | AI | Claude Haiku through the Vercel AI SDK, behind a daily per-user limit; every feature has a non-AI fallback |
-| Auth | Better Auth: email/password and the anonymous (guest) plugin |
+| Auth | Better Auth: email/password and the anonymous (guest) plugin; personal API tokens for MCP |
+| MCP | Official MCP SDK, stateless Streamable HTTP at `/api/mcp` |
 | Tests | Vitest (game rules, store, helpers) and Playwright (end-to-end) |
 | Hosting | Vercel, with a daily cron that removes guests idle for 90 days |
 

@@ -62,11 +62,12 @@ export function loadGame(userId: string): Promise<GameState> {
  * Runs in one transaction holding a per-user lock, so two quick commands
  * can't both take the same slot. Throws RuleError if the rules refuse it.
  */
-export async function runCommand(userId: string, command: GameCommand): Promise<void> {
-  await getDb().transaction(async (tx) => {
+export async function runCommand(userId: string, command: GameCommand): Promise<GameEvent[]> {
+  return getDb().transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${userId}))`);
     const { events } = apply(await readGame(tx, userId), command);
     for (const event of events) await write(tx, userId, event);
+    return events;
   });
 }
 

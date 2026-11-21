@@ -18,6 +18,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [store] = useState(() => createGameStore(new ServerRepository(), { ...browserDeps, onEvents }));
   useEffect(() => {
     void store.getState().load();
+    // Coming back to the tab: pick up anything added from elsewhere (an MCP client, another tab).
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void store.getState().sync();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
   }, [store]);
   return <GameContext value={store}>{children}</GameContext>;
 }
