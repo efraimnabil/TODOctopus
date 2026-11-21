@@ -56,6 +56,11 @@ export interface GameStoreState {
   load(): Promise<void>;
   /** Re-read the saved game (after signing in/out, or a failed save) */
   reload(): Promise<void>;
+  /**
+   * Quietly picks up changes made elsewhere (another tab, an MCP client).
+   * Does nothing while a save or an animation is in flight, or if nothing changed.
+   */
+  sync(): Promise<void>;
   addTask(input: TaskInput): boolean;
   editTask(taskId: string, patch: Partial<TaskInput>): boolean;
   completeTask(taskId: string, cutIndex?: number): void;
@@ -78,6 +83,25 @@ export type GameStore = ReturnType<typeof createGameStore>;
 
 export function createGameStore(repo: GameRepository, deps: GameDeps = browserDeps) {
   return createStore<GameStoreState>()((set, get) => {
+    /** Replaces what's on screen with a freshly loaded game, keeping the view where it makes sense. */
+    function adopt({ game, account }: { game: GameState; account: Account | null }) {
+      set((s) => {
+        const alive = livingOctopuses(game);
+        const keep = alive.some((o) => o.id === s.activeId);
+        return {
+          game,
+          account,
+          activeId: keep ? s.activeId : (alive[0]?.id ?? null),
+          selectedId: game.tasks.some((t) => t.id === s.selectedId && t.status === "open")
+            ? s.selectedId
+            : null,
+          retracting: [],
+          dying: [],
+          defeatedCard: null,
+        };
+      });
+    }
+
     /** Applies a command now, then saves it in the background. */
     function run(command: GameCommand): boolean {
       let result;
@@ -164,22 +188,26 @@ export function createGameStore(repo: GameRepository, deps: GameDeps = browserDe
           set({ error: "Couldn't reach the server" });
           return;
         }
-        const { game, account } = loaded;
-        set((s) => {
-          const alive = livingOctopuses(game);
-          const keep = alive.some((o) => o.id === s.activeId);
-          return {
-            game,
-            account,
-            activeId: keep ? s.activeId : (alive[0]?.id ?? null),
-            selectedId: game.tasks.some((t) => t.id === s.selectedId && t.status === "open")
-              ? s.selectedId
-              : null,
-            retracting: [],
-            dying: [],
-            defeatedCard: null,
-          };
-        });
+        adopt(loaded);
+      },
+
+      async sync() {
+        const busy = (s: GameStoreState) =>
+          s.status !== "ready" ||
+          s.pending > 0 ||
+          s.dying.length > 0 ||
+          s.retracting.length > 0 ||
+          s.defeatedCard !== null;
+        if (busy(get())) return;
+        let loaded;
+        try {
+          loaded = await repo.load();
+        } catch {
+          return; // a quiet check: no error banner
+        }
+        const now = get();
+        if (busy(now) || JSON.stringify(loaded.game) === JSON.stringify(now.game)) return;
+        adopt(loaded);
       },
 
       addTask(input) {
