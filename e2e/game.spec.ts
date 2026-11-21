@@ -27,7 +27,7 @@ test("slashing the last tentacle defeats the octopus and mounts it in the trophy
   await expect(page.getByRole("link", { name: /Achievement unlocked/ })).toBeVisible();
   const card = page.getByRole("dialog", { name: /is gone/ });
   await expect(card).toBeVisible({ timeout: 30_000 });
-  await card.getByRole("button").click();
+  await card.getByRole("button", { name: "Keep going" }).click();
   await saved(page);
 
   await page.goto("/trophies");
