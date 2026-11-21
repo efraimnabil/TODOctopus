@@ -156,3 +156,27 @@ test("the skip link and sign-in dialog work from the keyboard", async ({ page })
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
+
+test("AI splits a task into steps after the player allows it", async ({ page }) => {
+  await openGame(page);
+  await addTask(page, "Start my session"); // creates the guest account
+  await saved(page);
+
+  await page.locator("#new-task").fill("Plan the trip");
+  await page.getByRole("button", { name: /Split with AI/ }).click();
+
+  // Nothing is sent until the player agrees.
+  await expect(page.getByRole("group", { name: "AI consent" })).toBeVisible();
+  await page.getByRole("button", { name: "Allow" }).click();
+  await page.getByRole("button", { name: /Split with AI/ }).click();
+
+  const preview = page.getByRole("group", { name: "Suggested steps" });
+  await expect(preview).toBeVisible();
+  await preview.getByRole("checkbox").nth(1).uncheck();
+  await preview.getByRole("button", { name: "Grow 2" }).click();
+
+  await expect(taskRow(page, "Research the options")).toBeVisible();
+  await expect(taskRow(page, "Do the first step")).toBeVisible();
+  await expect(taskRow(page, "Pick one and decide")).toHaveCount(0);
+  await saved(page);
+});

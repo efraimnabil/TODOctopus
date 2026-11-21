@@ -84,6 +84,16 @@ export default function AboutPage() {
         ))}
       </dl>
 
+      <section id="ai" className="mt-14">
+        <h2 className="text-2xl">AI features</h2>
+        <p className="mt-2 text-lg text-foam/80">
+          Some features (like splitting a task into steps) use Anthropic&rsquo;s Claude. They
+          only run after you allow them, and only the text you type is sent: a task title, never
+          your account details or other tasks. The AI can&rsquo;t change anything on its own; it
+          only suggests, and you decide. Turn it off any time by clearing this site&rsquo;s data.
+        </p>
+      </section>
+
       <p className="mt-10 text-foam/60">
         Source code:{" "}
         <a
