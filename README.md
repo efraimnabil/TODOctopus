@@ -8,8 +8,24 @@ A to-do list where every task is a tentacle of a living 3D octopus. Add a task a
 
 - Each octopus has up to eight tentacles. The next task after that summons a new octopus.
 - **Slash** a tentacle by clicking it, swiping across it, or pressing *Slash* in the list. **Delete** (a mistake) retracts it instead.
-- Defeated octopuses go to the trophy room (`/trophies`) along with your streak.
+- Give a task a **priority** (low, medium, high) and an optional **due date**. A tentacle past its due date glows angry red and its label turns red too.
+- **Sort** the list by priority, due date, newest or oldest, and filter it.
+- Pick a **body** for your octopus: Classic, Common, Giant Pacific, Blue-ringed, Realistic, a translucent Moon jelly, or *Surprise me* for a random one each time.
+- Defeated octopuses go to the trophy room (`/trophies`) with your streak, an activity chart and 11 **achievements** (you get a toast when one unlocks). Share a defeat or your trophies with the share button.
+- Sounds are synthesized in the browser, with haptics on phones. Toggle them with the sound button.
 - Nobody has to sign up. The first task silently creates a guest account on the server; *Save your progress* turns it into a real account and keeps everything.
+
+### Keyboard
+
+| Key | Action |
+|---|---|
+| `J` / `K` | Select the next / previous tentacle |
+| `S` | Slash the selected tentacle |
+| `N` | Focus the new-task field |
+| `M` | Mute / unmute |
+| `←` `→` | Switch octopus |
+| `?` | Show the shortcut list |
+| `Esc` | Close a dialog or clear the selection |
 
 ## Stack
 
@@ -56,13 +72,8 @@ pnpm db:generate # new migration from src/db/schema.ts
 pnpm db:migrate  # apply migrations
 ```
 
-`pnpm e2e` uses the database in `.env.local`, so point that at a dev branch, never production. It uses your installed Chrome (set `CI=1` to use Playwright's Chromium) and deletes the test accounts it creates.
+`pnpm e2e` uses the database in `.env.local`, so point that at a dev branch, never production. It uses your installed Chrome (set `CI=1` to use Playwright's Chromium) and deletes the test accounts it creates. It also sets `E2E_NO_RATE_LIMIT=1` on its own server so sign-in rate limits don't make it flaky; never set that in production.
 
-## Credits
+## Deploying
 
-- Original idea: [Efraim Nabil](https://www.linkedin.com/in/efraimnabil/) and [Heba Ezz](https://www.linkedin.com/in/heba-ezz-361773250/)
-- Front end: [Efraim Nabil](https://www.linkedin.com/in/efraimnabil/)
-- UI/UX: [Heba Ezz](https://www.linkedin.com/in/heba-ezz-361773250/)
-- Back end (v1): [Gerges Hany](https://www.linkedin.com/in/gergeshany/)
-
-The v1 (Vite) app is preserved at the `v1-legacy` tag.
+Vercel builds with `pnpm vercel-build`, which applies pending database migrations (`drizzle-kit migrate`) and then runs `next build`, so each deploy migrates the database it points at. Set the environment variables above in the Vercel project (Production and Preview).
