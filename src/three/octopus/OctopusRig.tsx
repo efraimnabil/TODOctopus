@@ -114,6 +114,7 @@ export function OctopusRig({
       shadowMat,
       fading: [skin, lid, web, white, iris, pupil, sucker],
       skins: [skin, lid, web],
+      skinSet: new Set<THREE.Material>([skin, lid, web]),
     };
   }, [model.seed, palette, species]);
 
@@ -190,7 +191,7 @@ export function OctopusRig({
       );
     }
     for (const mat of parts.fading) {
-      mat.opacity = o.opacity * (parts.skins.includes(mat as never) ? skinOpacity : 1);
+      mat.opacity = o.opacity * (parts.skinSet.has(mat) ? skinOpacity : 1);
       mat.transparent = mat.opacity < 0.999;
     }
     if (shadow.current) {

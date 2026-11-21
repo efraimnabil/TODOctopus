@@ -123,8 +123,8 @@ export function SeveredPiece({ spawn, palette, species, fx, onDone }: Props) {
 
     s.fade = 1 - THREE.MathUtils.clamp((s.age - 2.8) / (LIFETIME - 2.8), 0, 1);
     tube.update(chain.pos, chain.count, spawn.side, s.radiusOfRing, s.colorOfRing);
-    if (suckers.current) writeSuckers(suckers.current, tube, 2, tube.rings - 2, suckerLayout);
-    material.opacity = s.fade;
+    if (suckers.current && !species.noSuckers) writeSuckers(suckers.current, tube, 2, tube.rings - 2, suckerLayout);
+    material.opacity = s.fade * (species.opacity ?? 1);
     suckerMat.opacity = s.fade;
 
     if (s.age > LIFETIME && !s.done) {
@@ -140,6 +140,7 @@ export function SeveredPiece({ spawn, palette, species, fx, onDone }: Props) {
         ref={suckers}
         args={[cupGeometry ?? undefined, suckerMat, tube.maxRings]}
         frustumCulled={false}
+        visible={!species.noSuckers}
         raycast={() => null}
       >
         {!cupGeometry && <cylinderGeometry args={[1, 1, 1, 14]} />}

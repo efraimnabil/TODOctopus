@@ -245,6 +245,18 @@ describe("deadlines and editing", () => {
     expect(state.tasks[0].dueAt).toBeNull();
   });
 
+  it("refuses a deadline no Date can hold", () => {
+    expect(() =>
+      apply(emptyGame(), {
+        type: "addTask",
+        taskId: "t-far",
+        input: { title: "x", priority: 1, dueAt: 1e16 },
+        at: T0,
+        spawn: { id: "o-far", name: "Octo", seed: 1 },
+      }),
+    ).toThrow(RuleError);
+  });
+
   it("defaults to no deadline", () => {
     expect(add(emptyGame(), "plain").state.tasks[0].dueAt).toBeNull();
   });

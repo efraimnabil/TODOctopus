@@ -18,7 +18,8 @@ export const priorities = [1, 2, 3] as const satisfies readonly Priority[];
 const titleField = z.string().trim().min(1, "Give the task a name").max(TITLE_MAX);
 const descriptionField = z.string().trim().max(DESCRIPTION_MAX);
 const priorityField = z.union([z.literal(1), z.literal(2), z.literal(3)]);
-const dueField = z.number().int().nonnegative().nullable();
+/** 8.64e15 is the last instant a JS Date can represent. */
+const dueField = z.number().int().nonnegative().max(8.64e15).nullable();
 
 export const taskInputSchema = z.object({
   title: titleField,

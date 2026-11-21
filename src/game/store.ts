@@ -109,7 +109,7 @@ export function createGameStore(repo: GameRepository, deps: GameDeps = browserDe
             account: s.account ?? { name: "Guest", email: null, isGuest: true },
           })),
         (err: unknown) => {
-          set((s) => ({ pending: s.pending - 1, error: saveErrorMessage(err) }));
+          set((s) => ({ pending: s.pending - 1, error: saveErrorMessage(err), unlocked: null }));
           // Undo what the server didn't accept.
           void get().reload();
         },
