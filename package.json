@@ -16,12 +16,14 @@
     "vercel-build": "drizzle-kit migrate && next build"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.107",
     "@neondatabase/serverless": "^1.2.1",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.2",
     "@react-three/postprocessing": "^3.2.2",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.1.0",
+    "ai": "^7.0.179",
     "better-auth": "^1.7.27",
     "drizzle-orm": "^0.45.4",
     "leva": "^0.10.1",

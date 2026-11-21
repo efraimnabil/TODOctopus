@@ -1,6 +1,7 @@
 import "server-only";
 import { and, eq, gt, lt, sql } from "drizzle-orm";
 import { getDb, schema, type Db } from "@/db";
+import { allow } from "@/lib/limit";
 import { apply, type GameCommand, type GameEvent } from "./rules";
 import type { GameState, Octopus, Task } from "./types";
 
@@ -168,19 +169,6 @@ export async function deleteIdleGuests(days = 90): Promise<number> {
  * Fixed-window write limit per user, kept in the same table as Better
  * Auth's limiter. Returns false once `max` writes happened in `windowMs`.
  */
-export async function allowWrite(userId: string, max = 120, windowMs = 60_000): Promise<boolean> {
-  const now = Date.now();
-  const key = `game-write:${userId}`;
-  const [row] = await getDb()
-    .insert(schema.rateLimit)
-    .values({ id: crypto.randomUUID(), key, count: 1, lastRequest: now })
-    .onConflictDoUpdate({
-      target: schema.rateLimit.key,
-      set: {
-        count: sql`case when ${schema.rateLimit.lastRequest} < ${now - windowMs} then 1 else ${schema.rateLimit.count} + 1 end`,
-        lastRequest: sql`case when ${schema.rateLimit.lastRequest} < ${now - windowMs} then ${now} else ${schema.rateLimit.lastRequest} end`,
-      },
-    })
-    .returning({ count: schema.rateLimit.count });
-  return row.count <= max;
+export function allowWrite(userId: string, max = 120, windowMs = 60_000): Promise<boolean> {
+  return allow(`game-write:${userId}`, max, windowMs);
 }
