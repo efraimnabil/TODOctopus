@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 import { isMuted, play, setMuted } from "@/lib/sound";
+import { sharePath, slashedText } from "@/lib/share";
 import { useNow } from "@/lib/useNow";
 import { computeStats, livingOctopuses, tentaclesOf } from "@/game/rules";
 import { sortTasks, stepSelection } from "@/game/view";
@@ -175,6 +176,8 @@ function DefeatDialog({ octopus }: { octopus: Octopus }) {
   useFocusTrap(panel);
   const held = tentaclesOf(game, octopus.id);
   const more = livingOctopuses(game).length > 0;
+  const now = useNow();
+  const stats = useMemo(() => computeStats(game, now), [game, now]);
   return (
     <div className="absolute inset-0 grid place-items-center bg-abyss/40 p-4">
       <div
@@ -208,7 +211,8 @@ function DefeatDialog({ octopus }: { octopus: Octopus }) {
         </button>
         <ShareButton
           className="mt-3 ml-2"
-          text={`I just defeated ${octopus.name} on TODOctopus: ${held.length} tentacles slashed. 🐙`}
+          text={`I just defeated ${octopus.name} on TODOctopus: ${slashedText(held.length)}. 🐙`}
+          path={sharePath({ name: octopus.name, slashed: held.length, streak: stats.streak })}
         />
       </div>
     </div>

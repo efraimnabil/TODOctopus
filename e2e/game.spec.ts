@@ -326,3 +326,40 @@ test("an MCP client with a personal token can add, list and slash tasks", async 
   await expect(page.getByText("No tokens yet.")).toBeVisible();
   expect((await call({ jsonrpc: "2.0", id: 1, method: "tools/list" })).status()).toBe(401);
 });
+
+test("sharing a defeat links to a page whose preview is a card with the octopus's name", async ({
+  page,
+  request,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.addInitScript(() => Object.defineProperty(navigator, "share", { value: undefined }));
+  await openGame(page);
+  await addTask(page, "Share me");
+  await taskRow(page, "Share me").getByRole("button", { name: "Slash" }).click();
+
+  const card = page.getByRole("dialog", { name: /is gone/ });
+  await expect(card).toBeVisible({ timeout: 30_000 });
+  const name = ((await card.getByRole("heading").textContent()) ?? "").replace(" is gone", "").trim();
+  await card.getByRole("button", { name: "Share" }).click();
+  await expect(card.getByRole("button", { name: "Copied!" })).toBeVisible();
+
+  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  const url = copied.match(/https?:\/\/\S+/)![0];
+  expect(new URL(url).pathname).toBe("/s");
+  expect(new URL(url).searchParams.get("n")).toBe(name);
+  expect(new URL(url).searchParams.get("k")).toBe("1");
+
+  // The link works, and its social preview is a real PNG card for that octopus.
+  const path = new URL(url).pathname + new URL(url).search;
+  const html = await (await request.get(path)).text();
+  expect(html).toContain(`${name} was defeated`);
+  const og = html.match(/property="og:image" content="([^"]+)"/)![1].replaceAll("&amp;", "&");
+  const img = await request.get(new URL(og).pathname + new URL(og).search);
+  expect(img.status()).toBe(200);
+  expect(img.headers()["content-type"]).toBe("image/png");
+
+  // A made-up name never reaches the card.
+  const spoof = await request.get("/s?n=Hacked+Name&k=3");
+  expect(await spoof.text()).not.toContain("Hacked Name");
+});
