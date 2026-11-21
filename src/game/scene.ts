@@ -18,6 +18,8 @@ export interface Tentacle {
   status: TentacleStatus;
   /** Chain point where the tentacle was slashed (visual only) */
   cutIndex?: number;
+  /** Past its deadline: the tentacle looks angry */
+  overdue?: boolean;
 }
 
 export type OctopusStatus = "alive" | "dying" | "dead";

@@ -67,6 +67,7 @@ export function OctopusRig({
 
   const palette = useMemo(() => createPalette(model.seed, species), [model.seed, species]);
   const mantleY = species.mantle.centerY;
+  const skinOpacity = species.opacity ?? 1;
   const parts = useMemo(() => {
     const skin = createSkinMaterial(palette, true, undefined, species, "mantle");
     const lid = createSkinMaterial(palette, false, palette.skin, species);
@@ -113,6 +114,7 @@ export function OctopusRig({
       shadowMat,
       fading: [skin, lid, web, white, iris, pupil, sucker],
       skins: [skin, lid, web],
+      skinSet: new Set<THREE.Material>([skin, lid, web]),
     };
   }, [model.seed, palette, species]);
 
@@ -189,8 +191,8 @@ export function OctopusRig({
       );
     }
     for (const mat of parts.fading) {
-      mat.opacity = o.opacity;
-      mat.transparent = o.opacity < 0.999;
+      mat.opacity = o.opacity * (parts.skinSet.has(mat) ? skinOpacity : 1);
+      mat.transparent = mat.opacity < 0.999;
     }
     if (shadow.current) {
       const fade = o.opacity * Math.max(0, 1 - rise * 0.6);

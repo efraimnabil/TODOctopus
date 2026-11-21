@@ -75,13 +75,23 @@ export interface Species {
     scallop: number;
   };
   tuning: Partial<Tuning>;
+  /** Skin opacity (1 = solid); jellyfish are see-through */
+  opacity?: number;
+  /** No suckers on the arms */
+  noSuckers?: boolean;
   /** Camera distance multiplier */
   view: number;
   /** Shadow size multiplier */
   footprint: number;
 }
 
-export type SpeciesId = "classic" | "common" | "giant" | "blueRinged" | "realistic";
+export type SpeciesId =
+  | "classic"
+  | "common"
+  | "giant"
+  | "blueRinged"
+  | "realistic"
+  | "jellyfish";
 
 export const SPECIES: Record<SpeciesId, Species> = {
   classic: {
@@ -209,6 +219,30 @@ export const SPECIES: Record<SpeciesId, Species> = {
     view: 1.4,
     footprint: 1.55,
   },
+  jellyfish: {
+    id: "jellyfish",
+    name: "Moon jelly",
+    blurb: "Not an octopus: a glowing see-through bell, long ribbon arms, no eyes.",
+    mantle: { radius: 1.05, stretch: 0.55, lean: 0, bottom: 0.32, bumps: 0.012, bumpFreq: 2, centerY: 3.1 },
+    skirt: { y: -0.3, radius: 0.95, height: 0.14 },
+    eyes: { radius: 0.001, position: [0, 0, 0], yaw: 0, iris: "#ffffff" },
+    arm: { length: 2.7, baseRadius: 0.06, tipRadius: 0.005, taper: 0.3, anchorY: 2.75, anchorRing: 0.8 },
+    colors: {
+      mantleTop: "#d6a8ff",
+      skin: "#8fe3ff",
+      tip: "#ff9be8",
+      underside: "#e0f7ff",
+      spot: "#ffffff",
+      sucker: "#ffffff",
+      sheen: "#c8f0ff",
+    },
+    pattern: { spotThreshold: 0.5, spotScale: 3, spotStrength: 0.25, mottle: 0 },
+    opacity: 0.6,
+    noSuckers: true,
+    tuning: { stiffness: 0.05, curl: 0.1, wave: 1.5, sway: 0.8, pitch: -1.4, gravity: -0.15 },
+    view: 1.3,
+    footprint: 0.8,
+  },
 };
 
 export const SPECIES_LIST: Species[] = [
@@ -217,6 +251,7 @@ export const SPECIES_LIST: Species[] = [
   SPECIES.giant,
   SPECIES.blueRinged,
   SPECIES.realistic,
+  SPECIES.jellyfish,
 ];
 
 export const DEFAULT_SPECIES: SpeciesId = "realistic";
@@ -237,7 +272,29 @@ export function loadSpeciesChoice(): SpeciesId {
   }
 }
 
-export function saveSpeciesChoice(id: SpeciesId): void {
+/** "random" gives every octopus a body of its own, picked from its seed. */
+export type SpeciesChoice = SpeciesId | "random";
+
+export function isSpeciesChoice(value: unknown): value is SpeciesChoice {
+  return value === "random" || isSpeciesId(value);
+}
+
+export function resolveSpecies(choice: SpeciesChoice, seed: number): Species {
+  if (choice !== "random") return SPECIES[choice];
+  return SPECIES_LIST[Math.abs(Math.trunc(seed)) % SPECIES_LIST.length];
+}
+
+/** Like loadSpeciesChoice, but "random" is allowed (the game, not the lab). */
+export function loadSpeciesPreference(): SpeciesChoice {
+  try {
+    const saved = window.localStorage.getItem(STORAGE_KEY);
+    return isSpeciesChoice(saved) ? saved : DEFAULT_SPECIES;
+  } catch {
+    return DEFAULT_SPECIES;
+  }
+}
+
+export function saveSpeciesChoice(id: SpeciesChoice): void {
   try {
     window.localStorage.setItem(STORAGE_KEY, id);
   } catch {

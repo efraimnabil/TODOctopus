@@ -24,15 +24,20 @@ test("slashing the last tentacle defeats the octopus and mounts it in the trophy
   await addTask(page, "Defeat me");
   await taskRow(page, "Defeat me").getByRole("button", { name: "Slash" }).click();
 
+  await expect(page.getByRole("link", { name: /Achievement unlocked/ })).toBeVisible();
   const card = page.getByRole("dialog", { name: /is gone/ });
   await expect(card).toBeVisible({ timeout: 30_000 });
-  await card.getByRole("button").click();
+  await card.getByRole("button", { name: "Keep going" }).click();
   await saved(page);
 
   await page.goto("/trophies");
   await expect(page.getByRole("heading", { name: "Trophy room" })).toBeVisible();
   await expect(page.getByText("Defeat me")).toBeVisible();
   await expect(page.getByText("No trophies yet")).toHaveCount(0);
+  // The slash and the defeat earned achievements.
+  await expect(page.getByRole("heading", { name: /First blood/ })).toContainText("earned");
+  await expect(page.getByRole("heading", { name: /Octopus down/ })).toContainText("earned");
+  await expect(page.getByRole("region", { name: "Activity" })).toContainText("1 slashed");
 });
 
 test("signing up keeps a guest's octopuses, and signing back in returns them", async ({ page }) => {
@@ -85,6 +90,45 @@ test("tasks can be sorted and filtered by priority", async ({ page }) => {
   await page.getByRole("group", { name: "Show priority" }).getByRole("button", { name: "High" }).click();
   await expect(taskRow(page, "Someday thing")).toHaveCount(0);
   await expect(taskRow(page, "Urgent thing")).toBeVisible();
+});
+
+test("a task with a past deadline is marked overdue and can be re-dated", async ({ page }) => {
+  await openGame(page);
+  await page.getByLabel("Due date").fill("2020-01-02");
+  await addTask(page, "Ancient errand");
+  const row = taskRow(page, "Ancient errand");
+  await expect(row).toContainText("Overdue");
+  await saved(page);
+
+  await page.reload();
+  await expect(taskRow(page, "Ancient errand")).toContainText("Overdue");
+
+  await row.getByRole("button", { name: /Ancient errand/ }).click();
+  await row.getByRole("button", { name: "Edit" }).click();
+  await row.getByLabel("Due date").fill("2999-01-01");
+  await row.getByRole("button", { name: "Save" }).click();
+  await expect(taskRow(page, "Ancient errand")).not.toContainText("Overdue");
+  await expect(taskRow(page, "Ancient errand")).toContainText("Due ");
+});
+
+test("tasks can be picked and slashed from the keyboard", async ({ page }) => {
+  await openGame(page);
+  await addTask(page, "First errand");
+  await addTask(page, "Second errand");
+  await page.locator("body").click({ position: { x: 700, y: 300 } });
+
+  await page.keyboard.press("j");
+  await expect(page.locator("aside li[class*=ring-brand-pink]")).toHaveCount(1);
+  await page.keyboard.press("s");
+  await expect(page.getByText("Slashed (1)")).toBeVisible();
+
+  await page.keyboard.press("?");
+  await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  await page.keyboard.press("n");
+  await expect(page.locator("#new-task")).toBeFocused();
 });
 
 test("the landing page, About and a missing page all render", async ({ page }) => {

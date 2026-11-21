@@ -15,6 +15,13 @@
       "when": 1795214277323,
       "tag": "0001_slow_the_liberteens",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795218550519,
+      "tag": "0002_last_mandrill",
+      "breakpoints": true
     }
   ]
 }

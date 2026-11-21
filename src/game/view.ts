@@ -1,10 +1,11 @@
 import type { GameState, Priority, Task } from "./types";
 
-export type SortKey = "priority" | "newest" | "oldest";
+export type SortKey = "priority" | "due" | "newest" | "oldest";
 export type PriorityFilter = Priority | "all";
 
 export const SORT_LABELS: Record<SortKey, string> = {
   priority: "Priority",
+  due: "Due soon",
   newest: "Newest",
   oldest: "Oldest",
 };
@@ -15,6 +16,13 @@ export function sortTasks(tasks: readonly Task[], key: SortKey): Task[] {
   out.sort((a, b) => {
     if (key === "newest") return b.createdAt - a.createdAt;
     if (key === "oldest") return a.createdAt - b.createdAt;
+    if (key === "due") {
+      // Deadlines first (soonest on top), then tasks without one.
+      const da = a.dueAt ?? Infinity;
+      const db = b.dueAt ?? Infinity;
+      if (da !== db) return da < db ? -1 : 1;
+      return b.priority - a.priority || a.createdAt - b.createdAt;
+    }
     return b.priority - a.priority || a.createdAt - b.createdAt;
   });
   return out;
@@ -28,6 +36,14 @@ export function filterTasks(tasks: readonly Task[], priority: PriorityFilter): T
  * Which hint a newcomer should see:
  * add → nothing yet, slash → has open tasks but has never slashed one, done.
  */
+/** The next (+1) or previous (-1) task in a list, wrapping; the first/last if none is selected. */
+export function stepSelection(tasks: readonly Task[], selectedId: string | null, direction: 1 | -1): string | null {
+  if (tasks.length === 0) return null;
+  const i = tasks.findIndex((t) => t.id === selectedId);
+  if (i === -1) return (direction === 1 ? tasks[0] : tasks[tasks.length - 1]).id;
+  return tasks[(i + direction + tasks.length) % tasks.length].id;
+}
+
 export type OnboardingStep = "add" | "slash" | "done";
 
 export function onboardingStep(game: GameState): OnboardingStep {

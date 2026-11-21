@@ -140,6 +140,7 @@ export const task = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     completedAt: timestamp("completed_at", { withTimezone: true }),
     cutIndex: smallint("cut_index"),
+    dueAt: timestamp("due_at", { withTimezone: true }),
   },
   (t) => [
     index("task_user_id_idx").on(t.userId),

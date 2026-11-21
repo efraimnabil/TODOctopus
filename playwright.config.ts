@@ -29,6 +29,6 @@ export default defineConfig({
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 300_000,
-    env: { BETTER_AUTH_URL: `http://localhost:${PORT}` },
+    env: { BETTER_AUTH_URL: `http://localhost:${PORT}`, E2E_NO_RATE_LIMIT: "1" },
   },
 });

@@ -69,11 +69,16 @@ export function TentacleLabels({
             else store.elements.delete(t.id);
           }}
           className={`absolute top-0 left-0 flex max-w-48 items-center gap-1.5 rounded-full px-2.5 py-1 text-sm whitespace-nowrap text-foam opacity-0 shadow-lg backdrop-blur transition-opacity ${
-            t.id === selectedId ? "bg-abyss/90 ring-2 ring-brand-pink" : "bg-abyss/70"
+            t.overdue
+              ? "bg-red-950/90 ring-2 ring-red-400"
+              : t.id === selectedId
+                ? "bg-abyss/90 ring-2 ring-brand-pink"
+                : "bg-abyss/70"
           }`}
         >
           <span className={`size-2 shrink-0 rounded-full ${PRIORITY_DOT[t.priority]}`} />
           <span className="truncate">{t.title}</span>
+          {t.overdue && <span className="shrink-0 text-xs text-red-300">overdue</span>}
         </div>
       ))}
     </div>

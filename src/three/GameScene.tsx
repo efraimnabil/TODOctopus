@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useGame, useGameStore } from "@/components/game/GameProvider";
 import { toScene } from "@/game/store";
+import { useNow } from "@/lib/useNow";
 import { createPalette } from "./octopus/constants";
 import { OctopusRig } from "./octopus/OctopusRig";
 import { DEFAULT_TUNING, type Tuning } from "./octopus/shared";
@@ -29,9 +30,10 @@ export default function GameScene({ species, quality, onSlow, showLabels }: Prop
   const dying = useGame((s) => s.dying);
   const retracting = useGame((s) => s.retracting);
   const selectedId = useGame((s) => s.selectedId);
+  const now = useNow();
   const model = useMemo(
-    () => (activeId ? toScene({ game, dying, retracting }, activeId) : null),
-    [activeId, game, dying, retracting],
+    () => (activeId ? toScene({ game, dying, retracting }, activeId, now) : null),
+    [activeId, game, dying, retracting, now],
   );
 
   const tuning = useRef<Tuning>({ ...DEFAULT_TUNING, ...species.tuning });

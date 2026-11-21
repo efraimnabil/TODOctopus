@@ -149,6 +149,15 @@ Each phase ends with something you can open and try. Phase 1 comes early on purp
   - **Analytics:** Vercel Web Analytics and Speed Insights (turn them on in the Vercel dashboard).
   - **Not done:** a custom domain, error tracking such as Sentry (needs a DSN), and retiring the Render services. All three need access only the owner has.
 
+### After launch (v2-next)
+- **Due dates:** an optional deadline per task (`task.due_at`, migration `0002`). Past it, the tentacle glows and thrashes red, its label turns red, and the list shows an Overdue badge. List sort gets "Due soon".
+- **Moon jelly:** a second creature (see-through bell, ribbon arms, no eyes, no suckers) and a "Surprise me" body option that gives every octopus its own body from its seed.
+- **Achievements:** 11 badges computed from the game (first slash, streaks, speed run, full house…), an unlock toast and sound, and a 14-day activity chart in the trophy room.
+- **Keyboard play:** J/K pick, S slash, N new task, M mute, ? help.
+- **Share:** a Share button on the defeat card and each trophy.
+- `vercel-build` runs `drizzle-kit migrate` before `next build`, so new migrations apply on deploy.
+- Fixed: editing one field of a task used to blank its description (the patch schema inherited defaults).
+
 ### Backlog (after launch)
 - Due dates: overdue tentacles turn angry/red and the octopus inks the screen.
 - Boss octopus for a big high-priority task.

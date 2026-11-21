@@ -43,7 +43,8 @@ function createAuth() {
       updateAge: DAY,
     },
     rateLimit: {
-      enabled: true,
+      // Only the e2e test server turns this off (its tests sign in too fast).
+      enabled: process.env.E2E_NO_RATE_LIMIT !== "1",
       storage: "database",
       window: 60,
       max: 100,

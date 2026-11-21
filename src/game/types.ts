@@ -34,6 +34,8 @@ export interface Task {
   completedAt: number | null;
   /** Where along the arm it was slashed (visual only) */
   cutIndex: number | null;
+  /** When it should be done by (epoch ms); null = no deadline */
+  dueAt: number | null;
 }
 
 export interface GameState {
@@ -47,6 +49,7 @@ export interface TaskInput {
   title: string;
   description?: string;
   priority: Priority;
+  dueAt?: number | null;
 }
 
 export interface Stats {

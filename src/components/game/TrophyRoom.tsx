@@ -1,9 +1,12 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
+import { achievements, activity } from "@/game/achievements";
 import { computeStats } from "@/game/rules";
 import { trophies } from "@/game/view";
+import { useNow } from "@/lib/useNow";
+import { ShareButton } from "../ShareButton";
 import { GameProvider, useGame } from "./GameProvider";
 
 export default function TrophyRoom() {
@@ -14,18 +17,14 @@ export default function TrophyRoom() {
   );
 }
 
-const subscribeMinute = (cb: () => void) => {
-  const t = window.setInterval(cb, 15_000);
-  return () => window.clearInterval(t);
-};
-const currentMinute = () => Math.floor(Date.now() / 60_000);
-
 function Room() {
   const ready = useGame((s) => s.status === "ready");
   const game = useGame((s) => s.game);
-  const minute = useSyncExternalStore(subscribeMinute, currentMinute, currentMinute);
-  const stats = useMemo(() => computeStats(game, minute * 60_000), [game, minute]);
+  const now = useNow();
+  const stats = useMemo(() => computeStats(game, now), [game, now]);
   const list = useMemo(() => trophies(game), [game]);
+  const badges = useMemo(() => achievements(game), [game]);
+  const days = useMemo(() => activity(game, now, 14), [game, now]);
 
   return (
     <main id="main" className="mx-auto max-w-3xl px-5 py-10 md:py-16">
@@ -48,6 +47,8 @@ function Room() {
             <Stat label="Tentacles slashed" value={stats.finished} />
             <Stat label="Day streak" value={stats.streak} />
           </dl>
+
+          <Activity days={days} />
 
           {list.length === 0 ? (
             <div className="glass mt-8 rounded-3xl p-8 text-center">
@@ -82,6 +83,10 @@ function Room() {
                   <p className="mt-1 text-xs tracking-[0.2em] text-foam/50 uppercase">
                     {t.tasks.length} {t.tasks.length === 1 ? "tentacle" : "tentacles"}
                   </p>
+                  <ShareButton
+                    className="mt-3"
+                    text={`I defeated ${t.name} on TODOctopus: ${t.tasks.length} tentacles slashed. 🐙`}
+                  />
                   <ul className="mt-3 space-y-0.5 text-sm text-foam/70">
                     {t.tasks.map((task) => (
                       <li key={task.id} className="truncate line-through decoration-foam/30">
@@ -93,6 +98,49 @@ function Room() {
               ))}
             </ul>
           )}
+          <h2 className="mt-12 text-2xl">
+            Achievements{" "}
+            <span className="text-base text-foam/60">
+              {badges.filter((b) => b.earned).length} / {badges.length}
+            </span>
+          </h2>
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+            {badges.map((b) => (
+              <li
+                key={b.id}
+                className={`glass flex items-start gap-3 rounded-2xl p-4 ${b.earned ? "" : "opacity-60"}`}
+              >
+                <span className={`text-3xl ${b.earned ? "" : "grayscale"}`} aria-hidden>
+                  {b.icon}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-lg leading-tight">
+                    {b.title}
+                    {b.earned && <span className="sr-only"> (earned)</span>}
+                  </h3>
+                  <p className="text-sm text-foam/70">{b.description}</p>
+                  {!b.earned && b.progress && (
+                    <div className="mt-2 flex items-center gap-2 text-xs text-foam/60">
+                      <div
+                        className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10"
+                        role="progressbar"
+                        aria-valuemin={0}
+                        aria-valuemax={b.progress.need}
+                        aria-valuenow={b.progress.have}
+                        aria-label={b.title}
+                      >
+                        <div
+                          className="h-full bg-brand-gradient"
+                          style={{ width: `${(b.progress.have / b.progress.need) * 100}%` }}
+                        />
+                      </div>
+                      {b.progress.have}/{b.progress.need}
+                    </div>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
         </>
       )}
     </main>
@@ -105,5 +153,39 @@ function Stat({ label, value }: { label: string; value: number }) {
       <dd className="text-3xl text-brand-gradient">{value}</dd>
       <dt className="mt-1 text-xs text-foam/60">{label}</dt>
     </div>
+  );
+}
+
+/** Tentacles slashed per day, last two weeks. */
+function Activity({ days }: { days: { day: number; count: number }[] }) {
+  const max = Math.max(1, ...days.map((d) => d.count));
+  const total = days.reduce((n, d) => n + d.count, 0);
+  return (
+    <section aria-label="Activity" className="glass mt-6 rounded-3xl p-5">
+      <h2 className="text-sm tracking-[0.2em] text-foam/60 uppercase">
+        Last 14 days · {total} slashed
+      </h2>
+      <ol className="mt-4 flex h-24 items-end gap-1.5">
+        {days.map((d) => {
+          const label = new Date(d.day).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+          return (
+            <li
+              key={d.day}
+              className="flex h-full flex-1 flex-col justify-end"
+              title={`${label}: ${d.count}`}
+            >
+              <span className="sr-only">
+                {label}: {d.count}
+              </span>
+              <div
+                aria-hidden
+                className={d.count ? "rounded-t bg-brand-gradient" : "rounded-t bg-white/10"}
+                style={{ height: d.count ? `${Math.max(8, (d.count / max) * 100)}%` : "4px" }}
+              />
+            </li>
+          );
+        })}
+      </ol>
+    </section>
   );
 }

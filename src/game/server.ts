@@ -46,6 +46,7 @@ async function readGame(db: Db | Tx, userId: string): Promise<GameState> {
         createdAt: t.createdAt.getTime(),
         completedAt: ms(t.completedAt),
         cutIndex: t.cutIndex,
+        dueAt: ms(t.dueAt),
       }),
     ),
   };
@@ -92,6 +93,7 @@ async function write(tx: Tx, userId: string, event: GameEvent) {
         title: t.title,
         description: t.description,
         priority: t.priority,
+        dueAt: date(t.dueAt),
         status: t.status,
         createdAt: new Date(t.createdAt),
       });
@@ -107,6 +109,7 @@ async function write(tx: Tx, userId: string, event: GameEvent) {
           title: t.title,
           description: t.description,
           priority: t.priority,
+          dueAt: date(t.dueAt),
           status: t.status,
           completedAt: date(t.completedAt),
           cutIndex: t.cutIndex,
