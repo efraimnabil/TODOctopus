@@ -205,3 +205,25 @@ test("AI fills the form from a sentence, and the player still presses Grow", asy
   await expect(taskRow(page, "Call mom")).toBeVisible();
   await saved(page);
 });
+
+test("the octopus talks back, and its last words come from the AI once allowed", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("todoctopus:ai-consent", "yes"));
+  await openGame(page);
+
+  await page.getByLabel("Octopus personality").selectOption("kind");
+  await addTask(page, "Water the plants");
+  // The speech bubble is decorative (aria-hidden) and fades after a few seconds.
+  await expect(page.locator('p[aria-hidden="true"]').filter({ hasText: "Water the plants" })).toBeVisible();
+
+  await taskRow(page, "Water the plants").getByRole("button", { name: "Slash" }).click();
+  const card = page.getByRole("dialog", { name: /is gone/ });
+  await expect(card).toBeVisible({ timeout: 30_000 });
+  await expect(card).toContainText("Avenge me, my beloved tentacles!");
+  await card.getByRole("button", { name: "Keep going" }).click();
+  await saved(page);
+
+  // Quiet mode: no built-in line either.
+  await page.getByLabel("Octopus personality").selectOption("off");
+  await addTask(page, "Quiet one");
+  await expect(page.locator('p[aria-hidden="true"]').filter({ hasText: "Quiet one" })).toHaveCount(0);
+});

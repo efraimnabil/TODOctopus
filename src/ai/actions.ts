@@ -1,9 +1,11 @@
 "use server";
 
 import { aiEnabled } from "./config";
+import { isVoiceTone } from "@/lib/personality";
 import { guarded } from "./guard";
 import { PARSE_MAX, isDateInput, parseTask, type ParsedTask } from "./parse";
 import { splitTask, type Subtask } from "./subtasks";
+import { lastWords } from "./voice";
 import { AiInputError, type AiResult } from "./types";
 import { TITLE_MAX } from "@/game/rules";
 
@@ -36,5 +38,32 @@ export async function suggestSubtasks(title: unknown): Promise<AiResult<Subtask[
     const steps = await splitTask(text);
     if (steps.length === 0) throw new Error("empty answer");
     return steps;
+  });
+}
+
+/**
+ * The octopus's last words, in the player's chosen tone. A one-line extra:
+ * the defeat card shows a built-in line if this fails or is unavailable.
+ */
+export async function octopusLastWords(
+  name: unknown,
+  tasks: unknown,
+  tone: unknown,
+): Promise<AiResult<string>> {
+  return guarded(async () => {
+    const titles = Array.isArray(tasks) ? tasks : null;
+    if (
+      typeof name !== "string" ||
+      !name.trim() ||
+      name.length > 40 ||
+      !titles ||
+      titles.length === 0 ||
+      titles.length > 8 ||
+      !titles.every((t) => typeof t === "string" && t.trim() && t.length <= TITLE_MAX) ||
+      !isVoiceTone(tone)
+    ) {
+      throw new AiInputError();
+    }
+    return lastWords(name.trim(), titles as string[], tone);
   });
 }

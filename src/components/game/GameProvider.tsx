@@ -4,12 +4,18 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { useStore } from "zustand";
 import { ServerRepository } from "@/game/serverRepository";
 import { browserDeps, createGameStore, type GameStore, type GameStoreState } from "@/game/store";
+import { sayForEvents } from "@/lib/octopusVoice";
 import { reactToGameEvents } from "@/lib/sound";
+
+function onEvents(events: Parameters<typeof reactToGameEvents>[0]) {
+  reactToGameEvents(events);
+  sayForEvents(events);
+}
 
 const GameContext = createContext<GameStore | null>(null);
 
 export function GameProvider({ children }: { children: ReactNode }) {
-  const [store] = useState(() => createGameStore(new ServerRepository(), { ...browserDeps, onEvents: reactToGameEvents }));
+  const [store] = useState(() => createGameStore(new ServerRepository(), { ...browserDeps, onEvents }));
   useEffect(() => {
     void store.getState().load();
   }, [store]);
