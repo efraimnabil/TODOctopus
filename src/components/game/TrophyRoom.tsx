@@ -6,6 +6,7 @@ import { achievements, activity } from "@/game/achievements";
 import { computeStats } from "@/game/rules";
 import { trophies } from "@/game/view";
 import { useNow } from "@/lib/useNow";
+import { ShareButton } from "../ShareButton";
 import { GameProvider, useGame } from "./GameProvider";
 
 export default function TrophyRoom() {
@@ -82,6 +83,10 @@ function Room() {
                   <p className="mt-1 text-xs tracking-[0.2em] text-foam/50 uppercase">
                     {t.tasks.length} {t.tasks.length === 1 ? "tentacle" : "tentacles"}
                   </p>
+                  <ShareButton
+                    className="mt-3"
+                    text={`I defeated ${t.name} on TODOctopus: ${t.tasks.length} tentacles slashed. 🐙`}
+                  />
                   <ul className="mt-3 space-y-0.5 text-sm text-foam/70">
                     {t.tasks.map((task) => (
                       <li key={task.id} className="truncate line-through decoration-foam/30">

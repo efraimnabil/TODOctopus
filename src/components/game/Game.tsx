@@ -12,12 +12,14 @@ import GameScene from "@/three/GameScene";
 import { detectQuality } from "@/three/quality";
 import type { Quality } from "@/three/SceneCanvas";
 import {
-  SPECIES,
   SPECIES_LIST,
-  loadSpeciesChoice,
+  isSpeciesChoice,
+  loadSpeciesPreference,
+  resolveSpecies,
   saveSpeciesChoice,
-  type SpeciesId,
+  type SpeciesChoice,
 } from "@/three/octopus/species";
+import { ShareButton } from "../ShareButton";
 import { SoundToggle } from "../SoundToggle";
 import { GameProvider, useGame, useGameStore } from "./GameProvider";
 import { AccountMenu } from "./AccountMenu";
@@ -35,7 +37,8 @@ function GameScreen() {
   const ready = useGame((s) => s.status === "ready");
   const [quality, setQuality] = useState<Quality>(detectQuality);
   const [showLabels, setShowLabels] = useState(true);
-  const [speciesId, setSpeciesId] = useState<SpeciesId>(loadSpeciesChoice);
+  const [speciesId, setSpeciesId] = useState<SpeciesChoice>(loadSpeciesPreference);
+  const seed = useGame((s) => s.game.octopuses.find((o) => o.id === s.activeId)?.seed ?? 0);
   const [help, setHelp] = useState(false);
   const toggleHelp = useCallback(() => setHelp((v) => !v), []);
   useKeyboard(toggleHelp);
@@ -43,7 +46,7 @@ function GameScreen() {
   return (
     <main id="main" className="relative h-dvh w-full overflow-hidden bg-abyss">
       <GameScene
-        species={SPECIES[speciesId]}
+        species={resolveSpecies(speciesId, seed)}
         quality={quality}
         onSlow={() => setQuality("low")}
         showLabels={showLabels}
@@ -62,12 +65,14 @@ function GameScreen() {
                     aria-label="Body shape"
                     value={speciesId}
                     onChange={(e) => {
-                      const id = e.target.value as SpeciesId;
+                      const id = e.target.value;
+                      if (!isSpeciesChoice(id)) return;
                       setSpeciesId(id);
                       saveSpeciesChoice(id);
                     }}
                     className="rounded-full border border-white/15 bg-abyss/60 px-2 py-0.5 text-foam outline-none"
                   >
+                    <option value="random">Surprise me</option>
                     {SPECIES_LIST.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.name}
@@ -194,6 +199,10 @@ function DefeatDialog({ octopus }: { octopus: Octopus }) {
         >
           {more ? "Next octopus" : "Keep going"}
         </button>
+        <ShareButton
+          className="mt-3 ml-2"
+          text={`I just defeated ${octopus.name} on TODOctopus: ${held.length} tentacles slashed. 🐙`}
+        />
       </div>
     </div>
   );

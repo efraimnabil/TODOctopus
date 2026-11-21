@@ -272,7 +272,29 @@ export function loadSpeciesChoice(): SpeciesId {
   }
 }
 
-export function saveSpeciesChoice(id: SpeciesId): void {
+/** "random" gives every octopus a body of its own, picked from its seed. */
+export type SpeciesChoice = SpeciesId | "random";
+
+export function isSpeciesChoice(value: unknown): value is SpeciesChoice {
+  return value === "random" || isSpeciesId(value);
+}
+
+export function resolveSpecies(choice: SpeciesChoice, seed: number): Species {
+  if (choice !== "random") return SPECIES[choice];
+  return SPECIES_LIST[Math.abs(Math.trunc(seed)) % SPECIES_LIST.length];
+}
+
+/** Like loadSpeciesChoice, but "random" is allowed (the game, not the lab). */
+export function loadSpeciesPreference(): SpeciesChoice {
+  try {
+    const saved = window.localStorage.getItem(STORAGE_KEY);
+    return isSpeciesChoice(saved) ? saved : DEFAULT_SPECIES;
+  } catch {
+    return DEFAULT_SPECIES;
+  }
+}
+
+export function saveSpeciesChoice(id: SpeciesChoice): void {
   try {
     window.localStorage.setItem(STORAGE_KEY, id);
   } catch {
