@@ -9,6 +9,7 @@ import {
   type GameCommand,
   type GameEvent,
 } from "./rules";
+import { achievements } from "./achievements";
 import { isOverdue } from "./due";
 import type { Octopus as SceneOctopus, Tentacle as SceneTentacle } from "./scene";
 import type { Account, GameState, Octopus, TaskInput } from "./types";
@@ -45,6 +46,8 @@ export interface GameStoreState {
   error: string | null;
   /** What just happened, in words, for screen readers (an aria-live region) */
   announcement: string;
+  /** An achievement just earned (shown briefly as a toast) */
+  unlocked: string | null;
   /** Who owns this game; null until the first change creates a guest */
   account: Account | null;
   /** Changes not yet confirmed as saved */
@@ -68,6 +71,7 @@ export interface GameStoreState {
   select(taskId: string | null): void;
   hover(taskId: string | null): void;
   clearError(): void;
+  clearUnlocked(): void;
 }
 
 export type GameStore = ReturnType<typeof createGameStore>;
@@ -83,12 +87,18 @@ export function createGameStore(repo: GameRepository, deps: GameDeps = browserDe
         set({ error: err instanceof RuleError ? err.message : "Something went wrong" });
         return false;
       }
+      const before = new Set(achievements(get().game).filter((a) => a.earned).map((a) => a.id));
+      const won = achievements(result.state).filter((a) => a.earned && !before.has(a.id));
       set((s) => ({
         game: result.state,
         error: null,
         pending: s.pending + 1,
         ...react(s, result.events),
-        announcement: describe(result.events) ?? s.announcement,
+        announcement:
+          [describe(result.events), ...won.map((a) => `Achievement unlocked: ${a.title}.`)]
+            .filter(Boolean)
+            .join(" ") || s.announcement,
+        unlocked: won.length ? `${won[0].icon} ${won[0].title}` : s.unlocked,
       }));
       deps.onEvents?.(result.events);
       repo.commit(command, result.state).then(
@@ -137,6 +147,7 @@ export function createGameStore(repo: GameRepository, deps: GameDeps = browserDe
       defeatedCard: null,
       error: null,
       announcement: "",
+      unlocked: null,
       account: null,
       pending: 0,
 
@@ -251,6 +262,10 @@ export function createGameStore(repo: GameRepository, deps: GameDeps = browserDe
 
       clearError() {
         set({ error: null });
+      },
+
+      clearUnlocked() {
+        set({ unlocked: null });
       },
     };
   });

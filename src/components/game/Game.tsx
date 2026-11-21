@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useFocusTrap } from "@/lib/useFocusTrap";
+import { play } from "@/lib/sound";
 import { useNow } from "@/lib/useNow";
 import { computeStats, livingOctopuses, tentaclesOf } from "@/game/rules";
 import type { Octopus } from "@/game/types";
@@ -89,6 +90,7 @@ function GameScreen() {
           />
           <DefeatCard />
           <Toast />
+          <UnlockToast />
           <LiveAnnouncer />
           <p className="pointer-events-none absolute bottom-5 left-1/2 hidden -translate-x-1/2 text-sm text-foam/50 lg:block">
             Click or swipe a tentacle to slash it · drag to look around · ← → switch octopus
@@ -190,6 +192,27 @@ function DefeatDialog({ octopus }: { octopus: Octopus }) {
         </button>
       </div>
     </div>
+  );
+}
+
+/** A brief banner when an achievement is earned. */
+function UnlockToast() {
+  const unlocked = useGame((s) => s.unlocked);
+  const clear = useGame((s) => s.clearUnlocked);
+  useEffect(() => {
+    if (!unlocked) return;
+    play("unlock");
+    const t = window.setTimeout(clear, 4500);
+    return () => window.clearTimeout(t);
+  }, [unlocked, clear]);
+  if (!unlocked) return null;
+  return (
+    <Link
+      href="/trophies"
+      className="glass absolute top-16 left-1/2 -translate-x-1/2 rounded-full px-5 py-2 text-sm text-foam"
+    >
+      <span className="text-brand-gradient">Achievement unlocked</span> · {unlocked}
+    </Link>
   );
 }
 

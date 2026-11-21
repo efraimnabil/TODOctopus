@@ -52,6 +52,20 @@ describe("game store", () => {
     expect(get().announcement).toContain("is defeated");
   });
 
+  it("flags a newly earned achievement once", async () => {
+    const { get } = setup();
+    await get().load();
+    get().addTask({ title: "a", priority: 1 });
+    get().addTask({ title: "b", priority: 1 });
+    expect(get().unlocked).toBeNull();
+    get().completeTask(get().game.tasks[0].id);
+    expect(get().unlocked).toContain("First blood");
+    get().clearUnlocked();
+    get().completeTask(get().game.tasks[1].id);
+    // the second slash defeats the octopus: a different achievement, not First blood again
+    expect(get().unlocked).toContain("Octopus down");
+  });
+
   it("reports invalid input without changing anything", async () => {
     const { get, repo } = setup();
     await get().load();

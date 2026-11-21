@@ -5,7 +5,7 @@
  */
 import type { GameEvent } from "@/game/rules";
 
-export type SoundName = "grow" | "slash" | "squish" | "ink" | "death" | "retract";
+export type SoundName = "grow" | "slash" | "squish" | "ink" | "death" | "retract" | "unlock";
 
 const KEY = "todoctopus:muted";
 
@@ -132,6 +132,9 @@ const recipes: Record<SoundName, (ctx: AudioContext, t: number) => void> = {
     tone(ctx, t, "sine", 320, 38, 1.5, 0.28);
     tone(ctx, t + 0.02, "triangle", 160, 30, 1.6, 0.15);
     hiss(ctx, t, "lowpass", 1400, 70, 1.4, 0.2);
+  },
+  unlock: (ctx, t) => {
+    [523, 659, 784, 1047].forEach((f, i) => tone(ctx, t + i * 0.09, "triangle", f, f * 1.01, 0.28, 0.1));
   },
   retract: (ctx, t) => {
     tone(ctx, t, "sine", 480, 160, 0.2, 0.09);

@@ -24,6 +24,7 @@ test("slashing the last tentacle defeats the octopus and mounts it in the trophy
   await addTask(page, "Defeat me");
   await taskRow(page, "Defeat me").getByRole("button", { name: "Slash" }).click();
 
+  await expect(page.getByRole("link", { name: /Achievement unlocked/ })).toBeVisible();
   const card = page.getByRole("dialog", { name: /is gone/ });
   await expect(card).toBeVisible({ timeout: 30_000 });
   await card.getByRole("button").click();
@@ -33,6 +34,10 @@ test("slashing the last tentacle defeats the octopus and mounts it in the trophy
   await expect(page.getByRole("heading", { name: "Trophy room" })).toBeVisible();
   await expect(page.getByText("Defeat me")).toBeVisible();
   await expect(page.getByText("No trophies yet")).toHaveCount(0);
+  // The slash and the defeat earned achievements.
+  await expect(page.getByRole("heading", { name: /First blood/ })).toContainText("earned");
+  await expect(page.getByRole("heading", { name: /Octopus down/ })).toContainText("earned");
+  await expect(page.getByRole("region", { name: "Activity" })).toContainText("1 slashed");
 });
 
 test("signing up keeps a guest's octopuses, and signing back in returns them", async ({ page }) => {
