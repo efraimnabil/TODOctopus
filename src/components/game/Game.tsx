@@ -23,6 +23,10 @@ import { ShareButton } from "../ShareButton";
 import { SoundToggle } from "../SoundToggle";
 import { GameProvider, useGame, useGameStore } from "./GameProvider";
 import { AccountMenu } from "./AccountMenu";
+import { LastWords } from "./LastWords";
+import { OctopusSpeech } from "./OctopusSpeech";
+import { ToneSelect } from "./ToneSelect";
+import { whatFirst } from "./whatFirst";
 import { TaskPanel } from "./TaskPanel";
 
 export default function Game() {
@@ -80,6 +84,7 @@ function GameScreen() {
                     ))}
                   </select>
                 </label>
+                <ToneSelect />
                 <SoundToggle />
                 <button
                   onClick={() => setShowLabels((v) => !v)}
@@ -96,6 +101,7 @@ function GameScreen() {
               </>
             }
           />
+          <OctopusSpeech />
           <DefeatCard />
           <Toast />
           <UnlockToast />
@@ -182,6 +188,7 @@ function DefeatDialog({ octopus }: { octopus: Octopus }) {
         <h2 id="defeat-title" className="mt-2 text-3xl">
           <span className="text-brand-gradient">{octopus.name}</span> is gone
         </h2>
+        <LastWords name={octopus.name} titles={held.map((t) => t.title)} />
         <ul className="mt-4 max-h-40 space-y-0.5 overflow-y-auto text-sm text-foam/60">
           {held.map((t) => (
             <li key={t.id} className="truncate line-through">
@@ -270,6 +277,8 @@ function useKeyboard(toggleHelp: () => void) {
           "priority",
         );
         s.select(stepSelection(open, s.selectedId, key === "j" ? 1 : -1));
+      } else if (key === "w") {
+        whatFirst(store);
       } else if (key === "s") {
         if (s.selectedId) s.completeTask(s.selectedId);
       } else if (key === "n") {
@@ -286,6 +295,7 @@ function useKeyboard(toggleHelp: () => void) {
 const SHORTCUTS: [string, string][] = [
   ["← →", "Switch octopus"],
   ["J / K", "Pick the next / previous task"],
+  ["W", "What should I do first?"],
   ["S", "Slash the picked task"],
   ["N", "New task"],
   ["M", "Mute or unmute"],

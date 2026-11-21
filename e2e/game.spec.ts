@@ -168,7 +168,6 @@ test("AI splits a task into steps after the player allows it", async ({ page }) 
   // Nothing is sent until the player agrees.
   await expect(page.getByRole("group", { name: "AI consent" })).toBeVisible();
   await page.getByRole("button", { name: "Allow" }).click();
-  await page.getByRole("button", { name: /Split with AI/ }).click();
 
   const preview = page.getByRole("group", { name: "Suggested steps" });
   await expect(preview).toBeVisible();
@@ -178,5 +177,72 @@ test("AI splits a task into steps after the player allows it", async ({ page }) 
   await expect(taskRow(page, "Research the options")).toBeVisible();
   await expect(taskRow(page, "Do the first step")).toBeVisible();
   await expect(taskRow(page, "Pick one and decide")).toHaveCount(0);
+  await saved(page);
+});
+
+test("AI fills the form from a sentence, and the player still presses Grow", async ({ page }) => {
+  await openGame(page);
+  await addTask(page, "Start my session");
+  await saved(page);
+
+  await page.locator("#new-task").fill("call mom tomorrow, it's important");
+  await page.getByRole("button", { name: /Fill details/ }).click();
+  // Each test has a fresh browser, so the consent question comes up again.
+  await page.getByRole("button", { name: "Allow" }).click();
+
+  await expect(page.locator("#new-task")).toHaveValue("Call mom");
+  await expect(page.getByRole("radio", { name: "High" })).toHaveAttribute("aria-checked", "true");
+  const t = new Date();
+  t.setDate(t.getDate() + 1);
+  const p = (n: number) => String(n).padStart(2, "0");
+  await expect(page.getByLabel("Due date")).toHaveValue(
+    `${t.getFullYear()}-${p(t.getMonth() + 1)}-${p(t.getDate())}`,
+  );
+  // Nothing was saved yet.
+  await expect(taskRow(page, "Call mom")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Grow", exact: true }).click();
+  await expect(taskRow(page, "Call mom")).toBeVisible();
+  await saved(page);
+});
+
+test("the octopus talks back, and its last words come from the AI once allowed", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("todoctopus:ai-consent", "yes"));
+  await openGame(page);
+
+  await page.getByLabel("Octopus personality").selectOption("kind");
+  await addTask(page, "Water the plants");
+  // The speech bubble is decorative (aria-hidden) and fades after a few seconds.
+  await expect(page.getByTestId("octopus-speech")).toBeVisible();
+
+  await taskRow(page, "Water the plants").getByRole("button", { name: "Slash" }).click();
+  const card = page.getByRole("dialog", { name: /is gone/ });
+  await expect(card).toBeVisible({ timeout: 30_000 });
+  await expect(card).toContainText("Avenge me, my beloved tentacles!");
+  await card.getByRole("button", { name: "Keep going" }).click();
+  await saved(page);
+
+  // Quiet mode: no built-in line either.
+  await page.getByLabel("Octopus personality").selectOption("off");
+  await addTask(page, "Quiet one");
+  await expect(page.getByTestId("octopus-speech")).toHaveCount(0);
+});
+
+test("What first? picks the most urgent tentacle and says why", async ({ page }) => {
+  await openGame(page);
+  await addTask(page, "Relax a bit");
+  await page.getByRole("radio", { name: "High" }).click();
+  await addTask(page, "Urgent thing");
+
+  await page.getByRole("button", { name: "What first?" }).click();
+  const advice = page.getByTestId("octopus-speech");
+  await expect(advice).toContainText("Urgent thing");
+  await expect(advice).toContainText("high priority");
+
+  // The same from the keyboard, with a different tentacle picked first.
+  await page.keyboard.press("Escape");
+  await page.locator("body").click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press("w");
+  await expect(page.getByTestId("octopus-speech")).toContainText("Start with");
   await saved(page);
 });

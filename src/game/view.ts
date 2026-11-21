@@ -1,3 +1,4 @@
+import { dueLabel } from "./due";
 import type { GameState, Priority, Task } from "./types";
 
 export type SortKey = "priority" | "due" | "newest" | "oldest";
@@ -74,4 +75,42 @@ export function trophies(game: GameState): TrophyEntry[] {
         .sort((a, b) => (a.completedAt ?? 0) - (b.completedAt ?? 0)),
     }))
     .sort((a, b) => b.defeatedAt - a.defeatedAt);
+}
+
+export interface NextUp {
+  task: Task;
+  /** Why this one, in a few words ("Overdue 2d", "Due tomorrow", "High priority") */
+  reason: string;
+}
+
+const SOON_MS = 2 * 24 * 60 * 60 * 1000;
+
+/**
+ * "What first?": overdue work, then anything due within two days, then high
+ * priority, then the rest by priority. Ties go to the earlier deadline, then
+ * the older task. Pure and free, so it works with AI off.
+ */
+export function nextUp(tasks: readonly Task[], now: number): NextUp | null {
+  const open = tasks.filter((t) => t.status === "open");
+  if (open.length === 0) return null;
+
+  const rank = (t: Task) => {
+    if (t.dueAt !== null && t.dueAt < now) return 0;
+    if (t.dueAt !== null && t.dueAt - now <= SOON_MS) return 1;
+    if (t.priority === 3) return 2;
+    return 3;
+  };
+  const due = (t: Task) => t.dueAt ?? Infinity;
+
+  const [best] = [...open].sort((a, b) => {
+    const r = rank(a) - rank(b);
+    if (r !== 0) return r;
+    if (rank(a) <= 2 && due(a) !== due(b)) return due(a) < due(b) ? -1 : 1;
+    return b.priority - a.priority || due(a) - due(b) || a.createdAt - b.createdAt;
+  });
+
+  const r = rank(best);
+  const reason =
+    r <= 1 ? dueLabel(best.dueAt!, now).text : r === 2 ? "High priority" : "Next in line";
+  return { task: best, reason };
 }
