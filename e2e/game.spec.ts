@@ -213,7 +213,7 @@ test("the octopus talks back, and its last words come from the AI once allowed",
   await page.getByLabel("Octopus personality").selectOption("kind");
   await addTask(page, "Water the plants");
   // The speech bubble is decorative (aria-hidden) and fades after a few seconds.
-  await expect(page.locator('p[aria-hidden="true"]').filter({ hasText: "Water the plants" })).toBeVisible();
+  await expect(page.getByTestId("octopus-speech")).toBeVisible();
 
   await taskRow(page, "Water the plants").getByRole("button", { name: "Slash" }).click();
   const card = page.getByRole("dialog", { name: /is gone/ });
@@ -225,5 +225,24 @@ test("the octopus talks back, and its last words come from the AI once allowed",
   // Quiet mode: no built-in line either.
   await page.getByLabel("Octopus personality").selectOption("off");
   await addTask(page, "Quiet one");
-  await expect(page.locator('p[aria-hidden="true"]').filter({ hasText: "Quiet one" })).toHaveCount(0);
+  await expect(page.getByTestId("octopus-speech")).toHaveCount(0);
+});
+
+test("What first? picks the most urgent tentacle and says why", async ({ page }) => {
+  await openGame(page);
+  await addTask(page, "Relax a bit");
+  await page.getByRole("radio", { name: "High" }).click();
+  await addTask(page, "Urgent thing");
+
+  await page.getByRole("button", { name: "What first?" }).click();
+  const advice = page.getByTestId("octopus-speech");
+  await expect(advice).toContainText("Urgent thing");
+  await expect(advice).toContainText("high priority");
+
+  // The same from the keyboard, with a different tentacle picked first.
+  await page.keyboard.press("Escape");
+  await page.locator("body").click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press("w");
+  await expect(page.getByTestId("octopus-speech")).toContainText("Start with");
+  await saved(page);
 });

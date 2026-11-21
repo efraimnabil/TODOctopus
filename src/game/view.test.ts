@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterTasks, onboardingStep, sortTasks, stepSelection, trophies } from "./view";
+import { filterTasks, nextUp, onboardingStep, sortTasks, stepSelection, trophies } from "./view";
 import type { GameState, Octopus, Priority, Task, TaskStatus } from "./types";
 
 const task = (
@@ -115,5 +115,59 @@ describe("trophies", () => {
     const list = trophies(game);
     expect(list.map((t) => t.octopusId)).toEqual(["o3", "o1"]);
     expect(list[1].tasks.map((t) => t.id)).toEqual(["y", "x"]);
+  });
+});
+
+describe("nextUp", () => {
+  const NOW = Date.UTC(2026, 10, 21, 12);
+  const DAY = 24 * 60 * 60 * 1000;
+  const t = (id: string, over: Partial<Task> = {}): Task => ({
+    id,
+    octopusId: "o",
+    slot: 0,
+    title: id,
+    description: "",
+    priority: 2,
+    status: "open",
+    createdAt: 1,
+    completedAt: null,
+    cutIndex: null,
+    dueAt: null,
+    ...over,
+  });
+
+  it("is null with nothing open", () => {
+    expect(nextUp([], NOW)).toBeNull();
+    expect(nextUp([t("a", { status: "done" })], NOW)).toBeNull();
+  });
+
+  it("puts the most overdue task first, whatever the priorities", () => {
+    const pick = nextUp(
+      [
+        t("high", { priority: 3 }),
+        t("late", { priority: 1, dueAt: NOW - DAY }),
+        t("later", { priority: 3, dueAt: NOW - 3 * DAY }),
+      ],
+      NOW,
+    );
+    expect(pick?.task.id).toBe("later");
+    expect(pick?.reason).toMatch(/Overdue/);
+  });
+
+  it("prefers something due within two days over plain high priority", () => {
+    const pick = nextUp([t("high", { priority: 3 }), t("soon", { dueAt: NOW + DAY })], NOW);
+    expect(pick?.task.id).toBe("soon");
+    expect(pick?.reason).toBe("Due tomorrow");
+  });
+
+  it("falls back to high priority, then the oldest of equals", () => {
+    expect(nextUp([t("a"), t("b", { priority: 3 })], NOW)).toMatchObject({
+      task: { id: "b" },
+      reason: "High priority",
+    });
+    expect(nextUp([t("new", { createdAt: 9 }), t("old", { createdAt: 2 })], NOW)).toMatchObject({
+      task: { id: "old" },
+      reason: "Next in line",
+    });
   });
 });

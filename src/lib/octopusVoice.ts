@@ -44,6 +44,8 @@ export function setTone(tone: Tone): void {
 export interface Bubble {
   id: number;
   text: string;
+  /** Read out by screen readers (advice the player asked for), not just chatter */
+  announce: boolean;
 }
 
 let bubble: Bubble | null = null;
@@ -52,9 +54,9 @@ let nextId = 1;
 
 export const getBubble = () => bubble;
 
-export function say(text: string | null): void {
+export function say(text: string | null, announce = false): void {
   clearTimeout(timer);
-  bubble = text ? { id: nextId++, text } : null;
+  bubble = text ? { id: nextId++, text, announce } : null;
   if (text) timer = setTimeout(() => say(null), BUBBLE_MS);
   notify();
 }

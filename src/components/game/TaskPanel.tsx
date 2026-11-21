@@ -10,10 +10,11 @@ import {
   type PriorityFilter,
   type SortKey,
 } from "@/game/view";
-import { useGame } from "./GameProvider";
+import { useGame, useGameStore } from "./GameProvider";
 import { AddTaskForm } from "./AddTaskForm";
 import { Onboarding } from "./Onboarding";
 import { TaskRow } from "./TaskRow";
+import { whatFirst } from "./whatFirst";
 
 /** The list side of the game: switch octopus, add, finish, edit, delete. */
 export function TaskPanel({ footer }: { footer: ReactNode }) {
@@ -23,6 +24,7 @@ export function TaskPanel({ footer }: { footer: ReactNode }) {
   const defeatedCard = useGame((s) => s.defeatedCard);
   const step = useGame((s) => s.step);
   const setActive = useGame((s) => s.setActive);
+  const store = useGameStore();
 
   const stage = useMemo(
     () => onStage({ game, dying, defeatedCard }),
@@ -110,6 +112,14 @@ export function TaskPanel({ footer }: { footer: ReactNode }) {
                 </button>
               ))}
             </div>
+            {alive && (
+              <button
+                onClick={() => whatFirst(store)}
+                className="rounded-full border border-brand-pink/40 px-2.5 py-0.5 text-foam/80 hover:text-foam"
+              >
+                What first?
+              </button>
+            )}
             <label className="ml-auto flex items-center gap-1.5 text-foam/55">
               Sort
               <select

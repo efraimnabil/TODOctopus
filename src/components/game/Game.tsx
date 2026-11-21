@@ -26,6 +26,7 @@ import { AccountMenu } from "./AccountMenu";
 import { LastWords } from "./LastWords";
 import { OctopusSpeech } from "./OctopusSpeech";
 import { ToneSelect } from "./ToneSelect";
+import { whatFirst } from "./whatFirst";
 import { TaskPanel } from "./TaskPanel";
 
 export default function Game() {
@@ -276,6 +277,8 @@ function useKeyboard(toggleHelp: () => void) {
           "priority",
         );
         s.select(stepSelection(open, s.selectedId, key === "j" ? 1 : -1));
+      } else if (key === "w") {
+        whatFirst(store);
       } else if (key === "s") {
         if (s.selectedId) s.completeTask(s.selectedId);
       } else if (key === "n") {
@@ -292,6 +295,7 @@ function useKeyboard(toggleHelp: () => void) {
 const SHORTCUTS: [string, string][] = [
   ["← →", "Switch octopus"],
   ["J / K", "Pick the next / previous task"],
+  ["W", "What should I do first?"],
   ["S", "Slash the picked task"],
   ["N", "New task"],
   ["M", "Mute or unmute"],

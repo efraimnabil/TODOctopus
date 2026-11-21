@@ -12,6 +12,8 @@ A to-do list where every task is a tentacle of a living 3D octopus. Add a task a
 - **Sort** the list by priority, due date, newest or oldest, and filter it.
 - Pick a **body** for your octopus: Classic, Common, Giant Pacific, Blue-ringed, Realistic, a translucent Moon jelly, or *Surprise me* for a random one each time.
 - Defeated octopuses go to the trophy room (`/trophies`) with your streak, an activity chart and 11 **achievements** (you get a toast when one unlocks). Share a defeat or your trophies with the share button.
+- **AI helpers** (optional, off without an API key, and only after the player allows them): split a task into steps, fill the form from a sentence ("call mom tomorrow, important", Arabic works too), speak a task, and a defeated octopus's last words. The AI only suggests; you still press Grow. Task text is sent to Anthropic's Claude; see `/about#ai`.
+- The octopus **talks back** (Playful, Savage, Kind or Quiet), and **What first?** picks the tentacle to tackle next: overdue, then due soon, then high priority.
 - Sounds are synthesized in the browser, with haptics on phones. Toggle them with the sound button.
 - Nobody has to sign up. The first task silently creates a guest account on the server; *Save your progress* turns it into a real account and keeps everything.
 
@@ -20,6 +22,7 @@ A to-do list where every task is a tentacle of a living 3D octopus. Add a task a
 | Key | Action |
 |---|---|
 | `J` / `K` | Select the next / previous tentacle |
+| `W` | What first? Highlights the tentacle to tackle next |
 | `S` | Slash the selected tentacle |
 | `N` | Focus the new-task field |
 | `M` | Mute / unmute |
@@ -34,6 +37,7 @@ A to-do list where every task is a tentacle of a living 3D octopus. Add a task a
 | App | Next.js 16 (App Router), React 19, TypeScript, Tailwind v4 |
 | 3D | React Three Fiber + drei + postprocessing. The octopus is procedural (Verlet-chain tentacles), not a model file |
 | Backend | Server actions + Neon Postgres via Drizzle ORM |
+| AI | Claude Haiku through the Vercel AI SDK, behind a daily per-user limit; every feature has a non-AI fallback |
 | Auth | Better Auth: email/password and the anonymous (guest) plugin |
 | Tests | Vitest (game rules, store, helpers) and Playwright (end-to-end) |
 | Hosting | Vercel, with a daily cron that removes guests idle for 90 days |
@@ -58,6 +62,9 @@ Environment variables:
 | `BETTER_AUTH_URL` | The site's own URL, e.g. `http://localhost:3000` |
 | `CRON_SECRET` | Protects `/api/cron/cleanup` |
 | `NEXT_PUBLIC_SITE_URL` | Optional. Public URL for the sitemap and social cards |
+| `ANTHROPIC_API_KEY` | Optional. Turns the AI helpers on. Set a monthly spend limit in the Anthropic console |
+| `AI_ENABLED` | Optional. `0` switches every AI helper off |
+| `AI_MOCK` | Tests only. `1` answers from canned data instead of calling the model |
 
 ## Scripts
 
