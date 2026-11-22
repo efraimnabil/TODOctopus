@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
 // WebGL is browser-only. While it loads, the old flat octopus holds the spot.
@@ -25,6 +26,22 @@ export function HeroPoster() {
   );
 }
 
+/**
+ * The poster shows first; the 3D scene (a large script) starts once the page
+ * has painted and the browser is idle, so the headline and the button are
+ * usable straight away instead of waiting on WebGL.
+ */
 export function HeroLoader() {
-  return <HeroScene />;
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const start = () => setReady(true);
+    if ("requestIdleCallback" in window) {
+      const id = window.requestIdleCallback(start, { timeout: 2500 });
+      return () => window.cancelIdleCallback(id);
+    }
+    // Safari has no requestIdleCallback.
+    const id = setTimeout(start, 1200);
+    return () => clearTimeout(id);
+  }, []);
+  return ready ? <HeroScene /> : <HeroPoster />;
 }

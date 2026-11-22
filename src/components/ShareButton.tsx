@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { count } from "@/lib/analytics";
 
 /**
  * Shares a line of text with the system share sheet, or copies it. `path`
@@ -18,6 +19,7 @@ export function ShareButton({
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
 
   const share = async () => {
+    count("share_clicked");
     const message = `${text} ${window.location.origin}${path}`;
     try {
       if (navigator.share) {

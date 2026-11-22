@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type SubmitEvent } from "react";
+import { count } from "@/lib/analytics";
 import { authClient } from "@/lib/auth-client";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 import { useGame } from "./GameProvider";
@@ -126,7 +127,10 @@ function AuthDialog({
       : await authClient.signIn.email({ email, password });
     setBusy(false);
     if (error) setError(error.message ?? "That didn't work. Try again.");
-    else onDone();
+    else {
+      if (signUp) count("signed_up");
+      onDone();
+    }
   };
 
   return (

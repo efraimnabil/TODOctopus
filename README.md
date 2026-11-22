@@ -4,6 +4,12 @@ A to-do list where every task is a tentacle of a living 3D octopus. Add a task a
 
 **Live:** https://todoctopus.vercel.app
 
+![Splitting a task with AI, swiping a tentacle off and defeating the octopus](docs/media/demo.gif)
+
+| Realistic body | Moon jelly body | Defeat card |
+|---|---|---|
+| ![The game](docs/media/play.png) | ![Moon jelly](docs/media/jellyfish.png) | ![Defeat](docs/media/defeat.png) |
+
 ## How it plays
 
 - Each octopus has up to eight tentacles. The next task after that summons a new octopus.
@@ -92,6 +98,8 @@ pnpm test        # unit tests
 pnpm e2e         # Playwright (builds and starts the app on :3100)
 pnpm db:generate # new migration from src/db/schema.ts
 pnpm db:migrate  # apply migrations
+pnpm media       # record the README demo (video + screenshots, needs system Chrome)
+pnpm media:gif   # turn the recording into docs/media/demo.gif (needs ffmpeg)
 ```
 
 `pnpm e2e` uses the database in `.env.local`, so point that at a dev branch, never production. It uses your installed Chrome (set `CI=1` to use Playwright's Chromium) and deletes the test accounts it creates. It also sets `E2E_NO_RATE_LIMIT=1` on its own server so sign-in rate limits don't make it flaky; never set that in production.

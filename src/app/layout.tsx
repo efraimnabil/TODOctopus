@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   title: { default: "TODOctopus · A to-do list with a 3D octopus", template: "%s · TODOctopus" },
   description: DESCRIPTION,
   applicationName: "TODOctopus",
-  icons: { icon: "/icon.png", apple: "/icon.png" },
+  icons: { icon: "/icon-192.png", apple: "/apple-icon.png" },
   openGraph: {
     type: "website",
     siteName: "TODOctopus",
