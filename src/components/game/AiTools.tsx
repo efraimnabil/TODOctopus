@@ -6,6 +6,7 @@ import type { Subtask } from "@/ai/subtasks";
 import type { AiResult } from "@/ai/types";
 import { endOfDay, toDateInput } from "@/game/due";
 import type { Priority } from "@/game/types";
+import { count } from "@/lib/analytics";
 import { useAi } from "@/lib/useAi";
 import { useSpeech, type SpeechLang } from "@/lib/useSpeech";
 import { AiConsent } from "./AiConsent";
@@ -68,6 +69,7 @@ export function AiTools({
   /** Calls the model for one job. The caller has checked consent. */
   const execute = async (job: Job) => {
     setPhase("loading");
+    count("ai_used", { feature: job.kind });
     if (job.kind === "split") {
       const res = await suggestSubtasks(job.text.trim());
       if (!res.ok) return fail(res.reason);

@@ -4,12 +4,14 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { useStore } from "zustand";
 import { ServerRepository } from "@/game/serverRepository";
 import { browserDeps, createGameStore, type GameStore, type GameStoreState } from "@/game/store";
+import { countGameEvents } from "@/lib/analytics";
 import { sayForEvents } from "@/lib/octopusVoice";
 import { reactToGameEvents } from "@/lib/sound";
 
 function onEvents(events: Parameters<typeof reactToGameEvents>[0]) {
   reactToGameEvents(events);
   sayForEvents(events);
+  countGameEvents(events);
 }
 
 const GameContext = createContext<GameStore | null>(null);

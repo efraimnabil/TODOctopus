@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, type SubmitEvent } from "react";
+import { count } from "@/lib/analytics";
 import { createApiToken, listApiTokens, revokeApiToken } from "@/mcp/actions";
 import type { TokenInfo } from "@/mcp/tokens";
 
@@ -46,6 +47,7 @@ export function TokensPanel() {
     setError("");
     const r = await createApiToken(label);
     if (!r.ok) return setError(MESSAGES[r.reason]);
+    count("token_created");
     setFresh(r.data.token);
     setCopied(false);
     setLabel("");
