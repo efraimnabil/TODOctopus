@@ -36,7 +36,7 @@ test("demo for the README", async ({ page }) => {
   await page.getByRole("radio", { name: "Medium" }).click();
   await page.locator("#new-task").fill("Plan the trip");
   await page.waitForTimeout(700);
-  await page.getByRole("button", { name: /Split with AI/ }).click();
+  await page.getByRole("button", { name: "Split into steps" }).click();
   const preview = page.getByRole("group", { name: "Suggested steps" });
   await expect(preview).toBeVisible();
   await page.waitForTimeout(1400);
@@ -76,7 +76,9 @@ test("demo for the README", async ({ page }) => {
   // Screenshots of the other bodies and the trophy room.
   await grow(page, "Water the plants");
   await grow(page, "Call mom");
+  await page.getByRole("button", { name: "Settings" }).click();
   await page.getByLabel("Body shape").selectOption("jellyfish");
+  await page.keyboard.press("Escape");
   await page.waitForTimeout(2500);
   await page.screenshot({ path: `${SHOTS}/jellyfish.png` });
   await page.waitForTimeout(500);

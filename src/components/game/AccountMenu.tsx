@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type SubmitEvent } from "react";
+import { useEffect, useRef, useState, type ReactNode, type SubmitEvent } from "react";
 import { count } from "@/lib/analytics";
 import { authClient } from "@/lib/auth-client";
 import { useFocusTrap } from "@/lib/useFocusTrap";
@@ -9,8 +9,8 @@ import { useGame } from "./GameProvider";
 
 type Mode = "sign-up" | "sign-in";
 
-/** Top-right: save progress / sign in for guests, the account for members. */
-export function AccountMenu() {
+/** Top-right: save progress / sign in for guests, the account for members. `before` sits to its left. */
+export function AccountMenu({ before }: { before?: ReactNode }) {
   const account = useGame((s) => s.account);
   const pending = useGame((s) => s.pending);
   const hasTasks = useGame((s) => s.game.tasks.length > 0);
@@ -22,10 +22,11 @@ export function AccountMenu() {
   return (
     <div className="absolute top-4 right-4 flex items-center gap-2 md:top-6 md:right-6">
       {pending > 0 && (
-        <span className="text-xs text-foam/60" aria-live="polite">
+        <span className="hidden text-xs text-foam/60 sm:inline" aria-live="polite">
           Saving…
         </span>
       )}
+      {before}
       {member ? (
         <div className="relative">
           <button
@@ -72,7 +73,8 @@ export function AccountMenu() {
               onClick={() => setDialog("sign-up")}
               className="rounded-full bg-brand-gradient px-4 py-1.5 text-sm text-white shadow-lg transition-transform hover:scale-105"
             >
-              Save your progress
+              <span className="sm:hidden">Save</span>
+              <span className="hidden sm:inline">Save your progress</span>
             </button>
           )}
         </>

@@ -103,10 +103,11 @@ test("a task with a past deadline is marked overdue and can be re-dated", async 
   await page.reload();
   await expect(taskRow(page, "Ancient errand")).toContainText("Overdue");
 
-  await row.getByRole("button", { name: /Ancient errand/ }).click();
   await row.getByRole("button", { name: "Edit" }).click();
-  await row.getByLabel("Due date").fill("2999-01-01");
-  await row.getByRole("button", { name: "Save" }).click();
+  const form = page.locator("aside li").filter({ has: page.getByLabel("Title") });
+  await expect(form.getByLabel("Title")).toHaveValue("Ancient errand");
+  await form.getByLabel("Due date").fill("2999-01-01");
+  await form.getByRole("button", { name: "Save" }).click();
   await expect(taskRow(page, "Ancient errand")).not.toContainText("Overdue");
   await expect(taskRow(page, "Ancient errand")).toContainText("Due ");
 });
@@ -163,7 +164,7 @@ test("AI splits a task into steps after the player allows it", async ({ page }) 
   await saved(page);
 
   await page.locator("#new-task").fill("Plan the trip");
-  await page.getByRole("button", { name: /Split with AI/ }).click();
+  await page.getByRole("button", { name: "Split into steps" }).click();
 
   // Nothing is sent until the player agrees.
   await expect(page.getByRole("group", { name: "AI consent" })).toBeVisible();
@@ -206,11 +207,65 @@ test("AI fills the form from a sentence, and the player still presses Grow", asy
   await saved(page);
 });
 
+test("voice input keeps listening through pauses and fills the form", async ({ page }) => {
+  // A stand-in for the browser's recognizer that, like Chrome, hangs up on
+  // its own after a pause in the middle of the sentence.
+  await page.addInitScript(() => {
+    localStorage.setItem("todoctopus:ai-consent", "yes");
+    type Result = { isFinal: boolean; 0: { transcript: string } };
+    class FakeRecognition {
+      lang = "";
+      continuous = false;
+      interimResults = false;
+      maxAlternatives = 1;
+      onresult: ((e: { resultIndex: number; results: Result[] }) => void) | null = null;
+      onerror: ((e: { error: string }) => void) | null = null;
+      onend: (() => void) | null = null;
+      static sessions = 0;
+      start() {
+        const n = ++FakeRecognition.sessions;
+        const say = (transcript: string, isFinal: boolean, at: number) =>
+          setTimeout(() => this.onresult?.({ resultIndex: 0, results: [{ isFinal, 0: { transcript } }] }), at);
+        if (n === 1) {
+          say("call mom", false, 100);
+          say("call mom", true, 300);
+          setTimeout(() => this.onend?.(), 500); // the browser gave up early
+        } else {
+          say("tomorrow, it's important", false, 200);
+          say("tomorrow, it's important", true, 400);
+        }
+      }
+      stop() {
+        setTimeout(() => this.onend?.(), 50);
+      }
+      abort() {}
+    }
+    const w = window as unknown as Record<string, unknown>;
+    w.SpeechRecognition = w.webkitSpeechRecognition = FakeRecognition;
+  });
+  await openGame(page);
+  await addTask(page, "Start my session");
+  await saved(page);
+
+  await page.getByRole("button", { name: "Speak a task" }).click();
+  await expect(page.getByRole("button", { name: "Stop listening" })).toBeVisible();
+  // Words show up live, and the early hang-up doesn't end the turn.
+  await expect(page.locator("#new-task")).toHaveValue("call mom tomorrow, it's important");
+  await expect(page.getByRole("button", { name: "Stop listening" })).toBeVisible();
+
+  // A couple of seconds of quiet wraps up, and Fill details reads the sentence.
+  await expect(page.getByRole("button", { name: "Speak a task" })).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator("#new-task")).toHaveValue("Call mom");
+  await expect(page.getByRole("radio", { name: "High" })).toHaveAttribute("aria-checked", "true");
+});
+
 test("the octopus talks back, and its last words come from the AI once allowed", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("todoctopus:ai-consent", "yes"));
   await openGame(page);
 
+  await page.getByRole("button", { name: "Settings" }).click();
   await page.getByLabel("Octopus personality").selectOption("kind");
+  await page.keyboard.press("Escape");
   await addTask(page, "Water the plants");
   // The speech bubble is decorative (aria-hidden) and fades after a few seconds.
   await expect(page.getByTestId("octopus-speech")).toBeVisible();
@@ -223,7 +278,9 @@ test("the octopus talks back, and its last words come from the AI once allowed",
   await saved(page);
 
   // Quiet mode: no built-in line either.
+  await page.getByRole("button", { name: "Settings" }).click();
   await page.getByLabel("Octopus personality").selectOption("off");
+  await page.keyboard.press("Escape");
   await addTask(page, "Quiet one");
   await expect(page.getByTestId("octopus-speech")).toHaveCount(0);
 });

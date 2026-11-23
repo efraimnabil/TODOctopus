@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useRef, useState } from "react";
 import { suggestSubtasks, understandTask } from "@/ai/actions";
 import type { Subtask } from "@/ai/subtasks";
 import type { AiResult } from "@/ai/types";
@@ -8,14 +8,12 @@ import { endOfDay, toDateInput } from "@/game/due";
 import type { Priority } from "@/game/types";
 import { count } from "@/lib/analytics";
 import { useAi } from "@/lib/useAi";
-import { useSpeech, type SpeechLang } from "@/lib/useSpeech";
 import { AiConsent } from "./AiConsent";
+import { CloseIcon, SparkIcon } from "./icons";
 import { SplitPreview } from "./SplitPreview";
 
-const noopSubscribe = () => () => {};
-
 type Phase = "idle" | "consent" | "loading" | "preview" | "error";
-type Job = { kind: "split" | "fill"; text: string };
+export type AiJob = { kind: "split" | "fill"; text: string };
 
 export interface Filled {
   title: string;
@@ -31,35 +29,24 @@ const ERRORS: Record<Extract<AiResult<unknown>, { ok: false }>["reason"], string
   error: "The AI didn't answer. Try again.",
 };
 
-const chip =
-  "rounded-full border border-brand-pink/40 px-3 py-1 text-xs text-foam/80 transition hover:text-foam disabled:opacity-40";
-
 /**
- * The AI helpers under the new-task box: split a task into steps, fill the
- * form from a sentence, or speak it. All of them only fill in or preview;
- * the player still presses Grow.
+ * The AI helpers for the new-task box: split a task into steps, or fill the
+ * form from a sentence. They only fill in or preview; the player still
+ * presses Grow.
  */
-export function AiTools({
-  title,
+export function useAiAssist({
   onFill,
   onGrowSteps,
 }: {
-  title: string;
   onFill: (filled: Filled) => void;
   onGrowSteps: (steps: Subtask[]) => void;
 }) {
   const ai = useAi();
   const [phase, setPhase] = useState<Phase>("idle");
+  const [job, setJob] = useState<AiJob | null>(null);
   const [steps, setSteps] = useState<Subtask[]>([]);
   const [error, setError] = useState("");
-  const browserLang = useSyncExternalStore<SpeechLang>(
-    noopSubscribe,
-    () => (navigator.language.toLowerCase().startsWith("ar") ? "ar-EG" : "en-US"),
-    () => "en-US",
-  );
-  const [picked, setPicked] = useState<SpeechLang | null>(null);
-  const lang = picked ?? browserLang;
-  const pending = useRef<Job | null>(null);
+  const pending = useRef<AiJob | null>(null);
 
   const fail = (reason: keyof typeof ERRORS) => {
     setError(ERRORS[reason]);
@@ -67,99 +54,62 @@ export function AiTools({
   };
 
   /** Calls the model for one job. The caller has checked consent. */
-  const execute = async (job: Job) => {
+  const execute = async (j: AiJob) => {
+    setJob(j);
     setPhase("loading");
-    count("ai_used", { feature: job.kind });
-    if (job.kind === "split") {
-      const res = await suggestSubtasks(job.text.trim());
+    count("ai_used", { feature: j.kind });
+    if (j.kind === "split") {
+      const res = await suggestSubtasks(j.text.trim());
       if (!res.ok) return fail(res.reason);
       setSteps(res.data);
       return setPhase("preview");
     }
-    const res = await understandTask(job.text.trim(), toDateInput(Date.now()));
+    const res = await understandTask(j.text.trim(), toDateInput(Date.now()));
     if (!res.ok) return fail(res.reason);
-    const { title: t, priority, due } = res.data;
-    onFill({ title: t, priority, dueAt: due ? endOfDay(due) : null });
+    const { title, priority, due } = res.data;
+    onFill({ title, priority, dueAt: due ? endOfDay(due) : null });
     setPhase("idle");
   };
 
-  const run = async (job: Job) => {
-    if (!job.text.trim()) return;
+  const run = async (j: AiJob) => {
+    if (!j.text.trim() || phase === "loading") return;
     if (ai.consent !== "yes") {
-      pending.current = job;
+      pending.current = j;
       return setPhase("consent");
     }
-    await execute(job);
+    await execute(j);
   };
-
-  const speech = useSpeech((text) => void run({ kind: "fill", text }));
-
-  if (!ai.available || ai.consent === "no") return null;
 
   const decide = (value: "yes" | "no") => {
     ai.setConsent(value);
-    const job = pending.current;
+    const j = pending.current;
     pending.current = null;
     setPhase("idle");
-    if (value === "yes" && job) void execute(job);
+    if (value === "yes" && j) void execute(j);
   };
 
-  const busy = phase === "loading";
+  const reset = () => setPhase("idle");
 
-  return (
-    <div className="space-y-2">
-      {(phase === "idle" || phase === "error") && (
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            className={chip}
-            disabled={!title.trim() || busy}
-            onClick={() => run({ kind: "split", text: title })}
-          >
-            ✨ Split with AI
-          </button>
-          <button
-            type="button"
-            className={chip}
-            disabled={!title.trim() || busy}
-            onClick={() => run({ kind: "fill", text: title })}
-          >
-            ✨ Fill details
-          </button>
-          {speech.supported && (
-            <>
-              <button
-                type="button"
-                className={chip}
-                aria-pressed={speech.listening}
-                aria-label={speech.listening ? "Stop listening" : "Speak a task"}
-                onClick={() => (speech.listening ? speech.stop() : speech.start(lang))}
-              >
-                {speech.listening ? "● Listening…" : "🎤 Speak"}
-              </button>
-              <button
-                type="button"
-                className={chip}
-                aria-label={`Speech language: ${lang === "ar-EG" ? "Arabic" : "English"}. Switch`}
-                onClick={() => setPicked(lang === "ar-EG" ? "en-US" : "ar-EG")}
-              >
-                {lang === "ar-EG" ? "ع" : "EN"}
-              </button>
-            </>
-          )}
-        </div>
-      )}
+  const panel = (
+    <>
       {phase === "consent" && (
         <AiConsent onAllow={() => decide("yes")} onDecline={() => decide("no")} />
       )}
-      {busy && (
-        <p className="px-1 text-xs text-foam/60" role="status">
-          Thinking…
+      {phase === "loading" && (
+        <p className="flex items-center gap-2 px-1 text-xs text-foam/70" role="status">
+          <span className="size-3 animate-spin rounded-full border-2 border-brand-pink/30 border-t-brand-pink" />
+          {job?.kind === "split" ? "Splitting it into steps…" : "Reading your task…"}
         </p>
       )}
       {phase === "error" && (
-        <p className="px-1 text-xs text-rose-300" role="alert">
-          {error}
+        <p
+          className="flex items-start gap-2 rounded-xl bg-rose-500/10 px-3 py-2 text-xs text-rose-200"
+          role="alert"
+        >
+          <span className="flex-1">{error}</span>
+          <button type="button" onClick={reset} aria-label="Dismiss" className="text-rose-200/70 hover:text-rose-100">
+            <CloseIcon size={12} />
+          </button>
         </p>
       )}
       {phase === "preview" && (
@@ -169,9 +119,44 @@ export function AiTools({
             onGrowSteps(picked);
             setPhase("idle");
           }}
-          onCancel={() => setPhase("idle")}
+          onCancel={reset}
         />
       )}
+    </>
+  );
+
+  return {
+    /** The server has a model and the player hasn't said no. */
+    enabled: ai.available && ai.consent !== "no",
+    busy: phase === "loading",
+    /** Something is open below the box (consent, a preview…). */
+    open: phase !== "idle",
+    run,
+    panel,
+  };
+}
+
+const chip =
+  "flex items-center gap-1.5 rounded-full bg-brand-pink/10 px-2.5 py-1 text-xs text-foam/85 ring-1 ring-brand-pink/30 transition hover:bg-brand-pink/20 hover:text-foam disabled:opacity-40";
+
+/** The two AI actions, offered once there is something typed. */
+export function AiChips({
+  text,
+  busy,
+  onRun,
+}: {
+  text: string;
+  busy: boolean;
+  onRun: (job: AiJob) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <button type="button" className={chip} disabled={busy} onClick={() => onRun({ kind: "split", text })}>
+        <SparkIcon size={12} /> Split into steps
+      </button>
+      <button type="button" className={chip} disabled={busy} onClick={() => onRun({ kind: "fill", text })}>
+        <SparkIcon size={12} /> Fill details
+      </button>
     </div>
   );
 }
