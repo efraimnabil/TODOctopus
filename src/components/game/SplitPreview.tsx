@@ -26,16 +26,23 @@ export function SplitPreview({
 
   return (
     <div className="glass space-y-2 rounded-2xl p-3" role="group" aria-label="Suggested steps">
-      <p className="text-xs text-foam/60">Suggested by AI. Untick what you don&rsquo;t want.</p>
+      <p className="text-xs text-foam/60">✨ Suggested steps. Untick what you don&rsquo;t want.</p>
       <ul className="space-y-1">
         {steps.map((s, i) => {
           const dot = PRIORITIES.find((p) => p.value === s.priority)?.dot ?? "";
           return (
             <li key={i}>
               <label className="flex cursor-pointer items-center gap-2 text-sm">
-                <input type="checkbox" checked={!off.has(i)} onChange={() => toggle(i)} />
+                <input
+                  type="checkbox"
+                  checked={!off.has(i)}
+                  onChange={() => toggle(i)}
+                  className="size-4 accent-brand-pink"
+                />
                 <span className={`size-2 rounded-full ${dot}`} aria-hidden />
-                <span className="text-foam">{s.title}</span>
+                <span dir="auto" className={off.has(i) ? "text-foam/40 line-through" : "text-foam"}>
+                  {s.title}
+                </span>
               </label>
             </li>
           );

@@ -13,20 +13,17 @@ import GameScene from "@/three/GameScene";
 import { detectQuality } from "@/three/quality";
 import type { Quality } from "@/three/SceneCanvas";
 import {
-  SPECIES_LIST,
-  isSpeciesChoice,
   loadSpeciesPreference,
   resolveSpecies,
   saveSpeciesChoice,
   type SpeciesChoice,
 } from "@/three/octopus/species";
 import { ShareButton } from "../ShareButton";
-import { SoundToggle } from "../SoundToggle";
 import { GameProvider, useGame, useGameStore } from "./GameProvider";
 import { AccountMenu } from "./AccountMenu";
 import { LastWords } from "./LastWords";
 import { OctopusSpeech } from "./OctopusSpeech";
-import { ToneSelect } from "./ToneSelect";
+import { SettingsMenu } from "./SettingsMenu";
 import { whatFirst } from "./whatFirst";
 import { TaskPanel } from "./TaskPanel";
 
@@ -60,48 +57,23 @@ function GameScreen() {
       {ready && (
         <>
           <EmptySea />
-          <AccountMenu />
-          <TaskPanel
-            footer={
-              <>
-                <label className="flex items-center gap-1.5 text-foam/50">
-                  <span className="hidden sm:inline">Body</span>
-                  <select
-                    aria-label="Body shape"
-                    value={speciesId}
-                    onChange={(e) => {
-                      const id = e.target.value;
-                      if (!isSpeciesChoice(id)) return;
-                      setSpeciesId(id);
-                      saveSpeciesChoice(id);
-                    }}
-                    className="rounded-full border border-white/15 bg-abyss/60 px-2 py-0.5 text-foam outline-none"
-                  >
-                    <option value="random">Surprise me</option>
-                    {SPECIES_LIST.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <ToneSelect />
-                <SoundToggle />
-                <button
-                  onClick={() => setShowLabels((v) => !v)}
-                  className="rounded-full px-2 py-0.5 text-foam/60 hover:bg-white/10"
-                >
-                  Labels: {showLabels ? "on" : "off"}
-                </button>
-                <button
-                  onClick={() => setQuality((q) => (q === "high" ? "low" : "high"))}
-                  className="rounded-full px-2 py-0.5 text-foam/60 hover:bg-white/10"
-                >
-                  Quality: {quality}
-                </button>
-              </>
+          <AccountMenu
+            before={
+              <SettingsMenu
+                species={speciesId}
+                onSpecies={(id) => {
+                  setSpeciesId(id);
+                  saveSpeciesChoice(id);
+                }}
+                showLabels={showLabels}
+                onLabels={setShowLabels}
+                quality={quality}
+                onQuality={setQuality}
+                onShortcuts={() => setHelp(true)}
+              />
             }
           />
+          <TaskPanel />
           <OctopusSpeech />
           <DefeatCard />
           <Toast />

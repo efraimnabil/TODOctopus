@@ -45,9 +45,11 @@ body {
   background: var(--color-abyss);
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-brand-pink);
-  outline-offset: 2px;
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-brand-pink);
+    outline-offset: 2px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

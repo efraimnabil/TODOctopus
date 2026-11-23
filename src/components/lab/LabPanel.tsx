@@ -134,7 +134,7 @@ export function LabPanel({
             id="species"
             value={speciesId}
             onChange={(e) => onPickSpecies(e.target.value as SpeciesId)}
-            className="min-w-0 flex-1 rounded-full border border-white/15 bg-abyss/60 px-2 py-1 text-foam outline-none"
+            className="min-w-0 flex-1 rounded-full border border-white/15 bg-abyss/60 px-2 py-1 text-foam outline-none focus-visible:ring-2 focus-visible:ring-brand-pink/60"
           >
             {SPECIES_LIST.map((s) => (
               <option key={s.id} value={s.id}>
